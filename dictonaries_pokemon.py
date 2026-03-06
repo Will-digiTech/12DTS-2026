@@ -27,6 +27,8 @@ own_pokemon = [
      }
 }]
 
+seen = [None]
+
 def overworld_timer():
     timer = random.randint(1, 2)
     print(timer)
@@ -87,12 +89,13 @@ def battle():
             print("Your Pokemon died!")
             break
         else:
-            print(f"{player_pokemon_name} now has {player_pokemon_hp} HP")
+            print(f"{player_pokemon_name} now has {player_pokemon_hp} HP\n")
 
-        player_attack()
+        player_attack(player_pokemon_attacks, seen, enemy_pokemon_name, enemy_pokemon_hp)
 
-
-        break
+        if enemy_pokemon_hp <= 0:
+            print(f"{enemy_pokemon_name} has died!")
+            break
 
 
 # def attack_cooldown(player_pokemon, last_attack, chosen_attack):
@@ -100,20 +103,34 @@ def battle():
 #     for i in player_pokemon["Attacks"]:
 #         print(i)
 
-def player_attack(player_pokemon_attacks):
-    attacks = list(player_pokemon_attacks.keys())
-
-    for i, attack in enumerate(attacks):
-        damage = player_pokemon_attacks[attack]
-        print(f"Choose {i + 1} for {attack}, it deals {damage} damage")
-
+def player_attack(player_pokemon_attacks, seen, enemy_pokemon_name, enemy_pokemon_hp):
     while True:
+        attacks = list(player_pokemon_attacks.keys())
+
+        for i, attack in enumerate(attacks):
+            damage = player_pokemon_attacks[attack]
+            print(f"Choose {i + 1} for {attack}, it deals {damage} damage")
+
+
         try:
             choice = int(input("Choose number for attack: "))
 
             if 1 <= choice <= len(player_pokemon_attacks):
                 index_attack = choice - 1
                 chosen_attack = attacks[index_attack]
+
+
+            if seen[-1] == chosen_attack:
+                print("Already used this attack, choose another")
+                continue
+            seen.append(chosen_attack)
+
+            chosen_attack_damage = player_pokemon_attacks[chosen_attack]
+            enemy_pokemon_hp -= chosen_attack_damage
+            print(f"\n{enemy_pokemon_name} now has {enemy_pokemon_hp} HP")
+
+            return
+
 
         except ValueError:
             print("Enter valid number")
@@ -129,3 +146,4 @@ def player_attack(player_pokemon_attacks):
 
 
 overworld_timer()
+print("Done boi")
