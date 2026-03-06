@@ -2,6 +2,9 @@
 import random
 import time
 
+#This is a small change lollll
+
+
 #Variables
 wild_pokemon = [
     {"Name": "Charizard",
