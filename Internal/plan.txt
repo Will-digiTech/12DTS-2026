@@ -50,3 +50,15 @@ Escape routes can be randomly unavaliable
 Guard Disguise - Guard fights back and wins
 Vent System - Vents are blocked off
 Wall climb - Rope is too short
+
+
+workshop
+|       \
+cell  -  bathroom
+|
+cafeteria - kitchen
+       \    /
+        yard
+
+capitalize
+capitalize

@@ -19,38 +19,84 @@ instructions = "\nWelcome to PRISON ESCAPE \n" \
 
 rooms = {
     "cell": {
-        "description": "",
-        "items": ["Sword", "Fork", "Knife"]
+        "description": "You are in your cellroom",
+        "items": ["Sword", "Fork", "Knife"],
+        "exits": ["workshop", "bathroom", "cafeteria"]
     },
-    "cafeteria": {},
-    "yard": {},
-    "kitchen": {},
-    "bathroom": {},
-    "workshop": {}
+    "cafeteria": {
+        "description": "",
+        "items": [],
+        "exits": ["cell", "yard", "kitchen"]
+    },
+    "yard": {
+        "description": "",
+        "items": [],
+        "exits": ["cafeteria", "kitchen"]
+    },
+    "kitchen": {
+        "description": "",
+        "items": [],
+        "exits": ["cafeteria", "yard"]
+    },
+    "bathroom": {
+        "description": "",
+        "items": [],
+        "exits": ["cell", "workshop"]
+    },
+    "workshop": {
+        "description": "",
+        "items": [],
+        "exits": ["cell", "bathroom"]
+    }
 }
 
 starting_room = rooms["cell"]
 
 
 class Player:
-    def __init__(self, room):
-        self.room = room
-        self.room_description = self.room["description"]
-        self.items = room["items"]
+    def __init__(self, player_location, all_rooms):
+        self.rooms = all_rooms
+
+        self.player_location = player_location
+        self.room_description = self.player_location["description"]
+        self.items = player_location["items"]
+        self.exits = player_location["exits"]
 
     def look_around(self):
-        if len(self.room["items"]) > 1:
+        if len(self.player_location["items"]) > 1:
             items = ", ".join(self.items[:-1]) + ' and ' + self.items[-1] #Displays items found in Enlgish
             print(f"You see a {items}")
 
-        elif self.room["items"]:
+        elif self.player_location["items"]:
             print(f"You see a {self.items[0]}")
 
         else:
             print("You don't find anything")
 
-player = Player(starting_room)
+    def move_room(self):
+        while True:
+            for index, value in enumerate(self.exits):
+                print(f"{index + 1}: {value.capitalize()}")
 
+            try:
+                choice = int(input("Choose a room to go to: "))
+
+                if 1 <= choice <= len(self.exits):
+                    index_choice = choice - 1
+                    print(f"You choose {self.exits[index_choice].capitalize()}")
+                    break
+
+            except ValueError:
+                print("Please input a valid number")
+                continue
+
+        #ADD CODE FOR WHEN USER HAS CHOSEN ROOM
+
+
+player = Player(starting_room, rooms)
+
+player.look_around()
+player.move_room()
 
 
 
