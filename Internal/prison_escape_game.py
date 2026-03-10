@@ -24,8 +24,9 @@ rooms = {
     },
     "cafeteria": {},
     "yard": {},
-    "laundry": {},
-    "kitchen": {}
+    "kitchen": {},
+    "bathroom": {},
+    "workshop": {}
 }
 
 starting_room = rooms["cell"]
@@ -50,8 +51,8 @@ class Player:
 
 player = Player(starting_room)
 
-player.look_around()
-print(player.items)
+
+
 
 
 
