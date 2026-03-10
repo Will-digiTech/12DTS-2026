@@ -17,7 +17,7 @@ wild_pokemon = [
         "Wind Blast": 15,
         }
 }]
-
+#e
 own_pokemon = [
     {"Name": "Pikachu",
      "Type": "Electric",
