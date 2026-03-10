@@ -1,0 +1,52 @@
+PRISON ESCAPE GAME PLANNING
+
+
+Items found in prison:
+    -Spoon: Can be found in the kitchen
+    -Toothbrush: Can be found in the bathroom
+    -Piece of Metal: Can be found in the workshop
+    -Rope: Can be found in the storage room
+    -Food: Can be found in cafeteria
+
+Items you can only get from helping prisoners:
+    -Screwdriver: Can get from cellmate, if you give him money, you get money from doing a shift in the kitchen.
+    -Piece of Metal: Can get from prisoner in the workshop, he left his toothbrush in the bathroom and asks you to get it.
+    -Fireworks: Can get from prisoner in bathroom, if you give him food
+        
+Items you can make:
+    -Makeshift Weapon: Made by combining toothbrush and piece of metal in the workshop.
+    -Lockpick: Can be made by combining a piece of metal and a screwdriver.
+
+
+
+Escape Route 1: Guard Disguise
+    Steps:
+    1. Find toothbrush
+    2. Find piece of metal
+    3. Make makeshift weapon
+    4. Use makeshift weapon to incapacitate guard
+    5. Take guard's uniform
+    6. Steal guard's keycard
+    7. Walk out front door
+
+Escape Route 2. Vent System
+    Steps:
+    1. Find screwdriver
+    2. Open vent in bathroom
+    3. Crawl through vent system
+    4. Reach guard office
+    5. Steal guard's keycard
+    6. Walk out front door
+
+Escape Route 3. Wall Climb
+    Steps:
+    1. Find Rope
+    2. Find metal
+    3. Make makeshift grappling hook
+    4. Distract gaurds with Fireworks
+    5. Climb out
+
+Escape routes can be randomly unavaliable
+Guard Disguise - Guard fights back and wins
+Vent System - Vents are blocked off
+Wall climb - Rope is too short
