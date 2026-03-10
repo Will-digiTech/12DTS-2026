@@ -6,10 +6,10 @@
 #Hold a maximum of 3 items, hide item under bed to get rid of item or use it
 #Rooms that you can only get to with specific items, such as vents with a
 
-
+print() #Add space at top
 
 #Variables
-instructions = "Welcome to PRISON ESCAPE \n" \
+instructions = "\nWelcome to PRISON ESCAPE \n" \
                "Your goal is to escape the prison! \n" \
                "Each playthrough the items to help you escape are randomly littered throughout the rooms \n" \
                "Type restart at anytime to retry \n" \
@@ -20,7 +20,7 @@ instructions = "Welcome to PRISON ESCAPE \n" \
 rooms = {
     "cell": {
         "description": "",
-        "items": ["Sword, Fork"]
+        "items": ["Sword", "Fork", "Knife"]
     },
     "cafeteria": {},
     "yard": {},
@@ -38,14 +38,15 @@ class Player:
         self.items = room["items"]
 
     def look_around(self):
-        if self.room["items"] > 1:
-            items = ", ".join(self.items) #Display contents of items better
+        if len(self.room["items"]) > 1:
+            items = ", ".join(self.items[:-1]) + ' and ' + self.items[-1] #Displays items found in Enlgish
+            print(f"You see a {items}")
 
-            print(f"You see {items}")
+        elif self.room["items"]:
+            print(f"You see a {self.items[0]}")
 
-            print(items)
         else:
-            print("Items is empty")
+            print("You don't find anything")
 
 player = Player(starting_room)
 
