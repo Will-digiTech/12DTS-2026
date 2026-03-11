@@ -82,15 +82,18 @@ class Player:
                 choice = int(input("Choose a room to go to: "))
 
                 if 1 <= choice <= len(self.exits):
-                    index_choice = choice - 1
-                    print(f"You choose {self.exits[index_choice].capitalize()}")
+                    index_choice = choice - 1 #Get the index of users choice
+                    
+                    chosen_room = self.exits[index_choice]
+                    print(f"You choose {chosen_room.capitalize()}") #Print chosen room
+
+                    self.player_location = self.rooms[chosen_room] #Update player location
                     break
 
             except ValueError:
                 print("Please input a valid number")
                 continue
 
-        #ADD CODE FOR WHEN USER HAS CHOSEN ROOM
 
 
 player = Player(starting_room, rooms)
