@@ -4,7 +4,7 @@
 #Inventory starts empty
 #Items are randomly scattered around rooms
 #Hold a maximum of 3 items, hide item under bed to get rid of item or use it
-#Rooms that you can only get to with specific items, such as vents with a
+#Rooms that you can only get to with specific items, such as vents with a screwdriver
 
 
 
@@ -12,7 +12,7 @@
 instructions = "\nWelcome to PRISON ESCAPE \n" \
                "Your goal is to escape the prison! \n" \
                "Each playthrough the items to help you escape are randomly littered throughout the rooms \n" \
-               "Type restart at anytime to retry \n" \
+               "Type restart at anytime to restart \n" \
                "Type quit at anytime to stop playing \n" \
                "Good Luck!!! \n"
 
@@ -23,6 +23,9 @@ class Room():
         self.actions = actions
         self.items = items
         self.exits = exits
+
+    def show_description(self):
+        print(self.description)
 
 
 class Player:
@@ -43,19 +46,19 @@ class Player:
 
             except ValueError:
                 print("Please input a valid number")
+                continue
 
             if choice == 1:
                 self.look_around()
-                break
             elif choice == 2:
                 self.move_room()
-                break
             elif choice == 3:
                 self.talk_to_npc()
-                break
             else:
                 print()
                 continue
+        
+            break
 
 
     def look_around(self):
@@ -64,10 +67,10 @@ class Player:
             print(f"\nYou see a {joined_items}")
 
         elif self.player_location.items:
-            print(f"You see a {self.player_location.items[0]}")
+            print(f"\nYou see a {self.player_location.items[0]}")
 
         else:
-            print("You don't find anything")
+            print("\nYou don't find anything")
 
         print() #Add space for readability
 
@@ -85,7 +88,7 @@ class Player:
                     index_choice = choice - 1 #Get the index of users choice
                     
                     chosen_room = self.player_location.exits[index_choice]
-                    print(f"You choose {chosen_room.capitalize()}") #Print chosen room
+                    print(f"You chose {chosen_room.capitalize()}") #Print chosen room
 
                     self.player_location = self.rooms[chosen_room] #Update player location
                     break
@@ -98,6 +101,7 @@ class Player:
                 continue
 
         print() #Add space for readability
+        print(self.player_location.description) #Print new location to terminal
 
 
     def talk_to_npc(self):
@@ -110,45 +114,45 @@ class Player:
 
 
 cell = Room(
-    "You are in your cellroom",
-    ["Check room for items", "Move room", "Talk to cellmate"],
-    ["Sword", "Fork", "Knife"],
-    ["workshop", "bathroom", "cafeteria"]
+    "You are in your Cell. \nIt's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n", #Description
+    ["Check room for items", "Move room", "Talk to cellmate"], #Actions
+    ["Sword", "Fork", "Knife"], #Items
+    ["workshop", "bathroom", "cafeteria"] #Exits
 )
 
 cafeteria = Room(
-    "",
-    ["Check room for items", "Move room"],
-    [],
-    ["cell", "yard", "kitchen"]
+    "You are in the Cafeteria. \nIt's a loud place with", #Description
+    ["Check room for items", "Move room"], #Actions
+    [], #Items
+    ["cell", "yard", "kitchen"] #Exits
 )
 
 yard = Room(
-    "",
-    ["Check room for items", "Move room"],
-    [],
-    ["cafeteria", "kitchen"]
+    "You are in the Yard. \n", #Description
+    ["Check room for items", "Move room"], #Actions``
+    [], #Items
+    ["cafeteria", "kitchen"] #Exits
 )
 
 kitchen = Room(
-    "",
-    ["Check room for items", "Move room"],
-    [],
-    ["cafeteria", "yard"]
+    "You are in the Kitchen. \n", #Description
+    ["Check room for items", "Move room"], #Actions
+    [], #Items
+    ["cafeteria", "yard"] #Exits
 )
 
 bathroom = Room(
-    "",
-    ["Check room for items", "Move room"],
-    [],
-    ["cell", "workshop"]
+    "You are in the Bathroom. \n", #Description
+    ["Check room for items", "Move room"], #Actions
+    [], #Items
+    ["cell", "workshop"] #Exits
 )
 
 workshop = Room(
-    "",
-    ["Check room for items", "Move room"],
-    [],
-    ["cell", "bathroom"]
+    "You are in the Workshop. \n", #Description
+    ["Check room for items", "Move room"], #Actions
+    [], #Items
+    ["cell", "bathroom"] #Exits
 )
 
 rooms = {
@@ -165,6 +169,7 @@ player = Player(rooms["cell"], rooms)
 
 #----Game Loop----
 print(instructions) #Give user game instructions
+print(player.player_location.description) #Starting room description
 
 while True:
     player.action()
