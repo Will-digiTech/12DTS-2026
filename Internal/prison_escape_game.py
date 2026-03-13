@@ -26,26 +26,31 @@ rooms = {
     },
     "cafeteria": {
         "description": "",
+        "actions": ["Check room for items", "Move room"],
         "items": [],
         "exits": ["cell", "yard", "kitchen"]
     },
     "yard": {
         "description": "",
+        "actions": ["Check room for items", "Move room"],
         "items": [],
         "exits": ["cafeteria", "kitchen"]
     },
     "kitchen": {
         "description": "",
+        "actions": ["Check room for items", "Move room"],
         "items": [],
         "exits": ["cafeteria", "yard"]
     },
     "bathroom": {
         "description": "",
+        "actions": ["Check room for items", "Move room"],
         "items": [],
         "exits": ["cell", "workshop"]
     },
     "workshop": {
         "description": "",
+        "actions": ["Check room for items", "Move room"],
         "items": [],
         "exits": ["cell", "bathroom"]
     }
@@ -59,14 +64,14 @@ class Player:
         self.rooms = all_rooms
 
         self.player_location = player_location
-        self.room_description = self.player_location["description"]
-        self.player_actions  = self.player_location["actions"]
 
         self.hi = 'hi' #TEMPORARY line, avoid getting static error
 
     def action(self):
         while True:
-            for index, action in enumerate(self.player_actions):
+            possible_actions = self.player_location["actions"]
+
+            for index, action in enumerate(possible_actions):
                 print(f"{index + 1}: {action}")
 
             try:
@@ -76,12 +81,14 @@ class Player:
                 print("Please input a valid number")
 
             if choice == 1:
-                player.look_around()
+                self.look_around()
                 break
             elif choice == 2:
-                player.move_room()
+                self.move_room()
+                break
             elif choice == 3:
-                player.talk_to_npc()
+                self.talk_to_npc()
+                break
             else:
                 print()
                 continue
@@ -103,7 +110,7 @@ class Player:
 
         print() #Add space for readability
 
-    def move_room(self): #NEED TO FIX THIS. When player changes room the exits for that room should show instead of the ones for cell.
+    def move_room(self):
         print() # Add space for readability
         exits = self.player_location["exits"]
         while True:
