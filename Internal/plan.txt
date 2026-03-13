@@ -54,7 +54,7 @@ Wall climb - Rope is too short
 
 workshop
 |       \
-cell  -  bathroom
+cell  ---  bathroom
 |
 cafeteria - kitchen
        \    /
