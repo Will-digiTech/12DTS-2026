@@ -17,46 +17,12 @@ instructions = "\nWelcome to PRISON ESCAPE \n" \
                "Good Luck!!! \n"
 
 
-rooms = {
-    "cell": {
-        "description": "You are in your cellroom",
-        "actions": ["Check room for items", "Move room", "Talk to cellmate"],
-        "items": ["Sword", "Fork", "Knife"],
-        "exits": ["workshop", "bathroom", "cafeteria"]
-    },
-    "cafeteria": {
-        "description": "",
-        "actions": ["Check room for items", "Move room"],
-        "items": [],
-        "exits": ["cell", "yard", "kitchen"]
-    },
-    "yard": {
-        "description": "",
-        "actions": ["Check room for items", "Move room"],
-        "items": [],
-        "exits": ["cafeteria", "kitchen"]
-    },
-    "kitchen": {
-        "description": "",
-        "actions": ["Check room for items", "Move room"],
-        "items": [],
-        "exits": ["cafeteria", "yard"]
-    },
-    "bathroom": {
-        "description": "",
-        "actions": ["Check room for items", "Move room"],
-        "items": [],
-        "exits": ["cell", "workshop"]
-    },
-    "workshop": {
-        "description": "",
-        "actions": ["Check room for items", "Move room"],
-        "items": [],
-        "exits": ["cell", "bathroom"]
-    }
-}
-
-starting_room = rooms["cell"]
+class Room():
+    def __init__(self, description, actions, items, exits):
+        self.description = description
+        self.actions = actions
+        self.items = items
+        self.exits = exits
 
 
 class Player:
@@ -69,9 +35,7 @@ class Player:
 
     def action(self):
         while True:
-            possible_actions = self.player_location["actions"]
-
-            for index, action in enumerate(possible_actions):
+            for index, action in enumerate(self.player_location.actions):
                 print(f"{index + 1}: {action}")
 
             try:
@@ -92,51 +56,49 @@ class Player:
             else:
                 print()
                 continue
-        
 
 
     def look_around(self):
-        items = self.player_location["items"]
-
-        if len(items) > 1:
-            joined_items = ", ".join(items[:-1]) + ' and ' + items[-1] #Displays items found in Enlgish
+        if len(self.player_location.items) > 1:
+            joined_items = ", ".join(self.player_location.items[:-1]) + ' and ' + self.player_location.items[-1] #Displays items found in Enlgish
             print(f"\nYou see a {joined_items}")
 
-        elif items:
-            print(f"You see a {items[0]}")
+        elif self.player_location.items:
+            print(f"You see a {self.player_location.items[0]}")
 
         else:
             print("You don't find anything")
 
         print() #Add space for readability
 
+
     def move_room(self):
-        print() # Add space for readability
-        exits = self.player_location["exits"]
+        print() #Add space for readability
         while True:
-            for index, value in enumerate(exits):
+            for index, value in enumerate(self.player_location.exits):
                 print(f"{index + 1}: {value.capitalize()}")
 
             try:
                 choice = int(input("Choose a room to go to: "))
 
-                if 1 <= choice <= len(exits):
+                if 1 <= choice <= len(self.player_location.exits):
                     index_choice = choice - 1 #Get the index of users choice
                     
-                    chosen_room = exits[index_choice]
+                    chosen_room = self.player_location.exits[index_choice]
                     print(f"You choose {chosen_room.capitalize()}") #Print chosen room
 
                     self.player_location = self.rooms[chosen_room] #Update player location
                     break
                     
                 else:
-                    print(f"Choose option between 1 and {len(exits)}")
+                    print(f"Choose option between 1 and {len(self.player_location.exits)}")
 
             except ValueError:
                 print("Please input a valid number")
                 continue
 
         print() #Add space for readability
+
 
     def talk_to_npc(self):
         #CODE FOR TALKING TO NPC
@@ -147,7 +109,58 @@ class Player:
 
 
 
-player = Player(starting_room, rooms)
+cell = Room(
+    "You are in your cellroom",
+    ["Check room for items", "Move room", "Talk to cellmate"],
+    ["Sword", "Fork", "Knife"],
+    ["workshop", "bathroom", "cafeteria"]
+)
+
+cafeteria = Room(
+    "",
+    ["Check room for items", "Move room"],
+    [],
+    ["cell", "yard", "kitchen"]
+)
+
+yard = Room(
+    "",
+    ["Check room for items", "Move room"],
+    [],
+    ["cafeteria", "kitchen"]
+)
+
+kitchen = Room(
+    "",
+    ["Check room for items", "Move room"],
+    [],
+    ["cafeteria", "yard"]
+)
+
+bathroom = Room(
+    "",
+    ["Check room for items", "Move room"],
+    [],
+    ["cell", "workshop"]
+)
+
+workshop = Room(
+    "",
+    ["Check room for items", "Move room"],
+    [],
+    ["cell", "bathroom"]
+)
+
+rooms = {
+    "cell": cell,
+    "cafeteria": cafeteria,
+    "yard": yard,
+    "kitchen": kitchen,
+    "bathroom": bathroom,
+    "workshop": workshop
+}
+
+player = Player(rooms["cell"], rooms)
 
 
 #----Game Loop----
