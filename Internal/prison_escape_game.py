@@ -6,7 +6,8 @@
 #Hold a maximum of 3 items, hide item under bed to get rid of item or use it
 #Rooms that you can only get to with specific items, such as vents with a screwdriver
 
-
+import time
+import os
 
 #VARIABLES
 INSTRUCTIONS = "\nWelcome to PRISON ESCAPE \n" \
@@ -213,14 +214,25 @@ def show_map(player):
             f"         {y_name.upper() if player.player_location.name == y_name else y_name} \n"
     )
 
+def clear_screen():
+    # Check the operating system name
+    if os.name == 'nt':
+        # Command for Windows
+        _ = os.system('cls')
+    else:
+        # Command for Linux, Mac, and other systems
+        _ = os.system('clear')
 
 #----Game Loop----
+clear_screen()
 print(INSTRUCTIONS) #Give user game instructions
 print(STARTING_MAP)
 print(player.player_location.description) #Starting room description
 
 while True:
     player.action()
+    print("restarting...")
+    time.sleep(2)
     # player.look_around()
     # player.move_room()
 
