@@ -8,7 +8,7 @@
 
 
 
-#Variables
+#VARIABLES
 INSTRUCTIONS = "\nWelcome to PRISON ESCAPE \n" \
                "Your goal is to escape the prison! \n" \
                "Each playthrough the items to help you escape are randomly littered throughout the rooms \n" \
@@ -18,12 +18,14 @@ INSTRUCTIONS = "\nWelcome to PRISON ESCAPE \n" \
 
 STARTING_MAP = "Workshop \n" \
         "|       \\ \n" \
-        f"Cell --- Bathroom \n" \
+        f"CELL --- Bathroom \n" \
         "| \n" \
         f"Cafeteria --- Kitchen \n" \
         "        \\    / \n" \
         f"         yard \n"
 
+
+#CLASSES
 class Room():
     def __init__(self, name, description, actions, items, exits):
         self.name = name
@@ -86,29 +88,10 @@ class Player:
     def move_room(self):
         print() #Add space for readability
 
-        #Creating strings for the locations on the map which are mutable. The room you are in shows as ALL CAPS.
-        w_name = workshop.name
-        cell_name = cell.name
-        b_name = bathroom.name
-        cafeteria_name = cafeteria.name
-        k_name = kitchen.name
-        y_name = yard.name
-
-        MAP = f'{w_name.upper() if player.player_location.name == w_name else w_name} \n' \
-                "|       \\ \n" \
-                f"Cell --- Bathroom \n" \
-                "| \n" \
-                f"Cafeteria --- Kitchen \n" \
-                "        \\    / \n" \
-                f"         yard \n"
-
-
         while True:
-            print("You chose to move room")
+            print("You chose to move room \n")
             print("----Prison Map----")
-            print(self.player_location.name)
-            print(MAP)
-
+            show_map(self)
 
             for index, value in enumerate(self.player_location.exits):
                 print(f"{index + 1}: {value.capitalize()}")
@@ -136,7 +119,8 @@ class Player:
             except ValueError:
                 print("Please input a valid number")
                 continue
-
+            
+        show_map(self)
         print() #Add space for readability
         print(self.player_location.description) #Print new location to terminal
 
@@ -208,6 +192,26 @@ rooms = {
 }
 
 player = Player(rooms["cell"], rooms)
+
+
+#FUNCTIONS
+def show_map(player):
+    #Creating strings for the locations on the map which are mutable. The room you are in shows as ALL CAPS.
+    w_name = workshop.name
+    cell_name = cell.name
+    b_name = bathroom.name
+    cafeteria_name = cafeteria.name
+    k_name = kitchen.name
+    y_name = yard.name
+
+    print(  f'{w_name.upper() if player.player_location.name == w_name else w_name} \n' \
+            "|       \\ \n" \
+            f"{cell_name.upper() if player.player_location.name == cell_name else cell_name} --- {b_name.upper() if player.player_location.name == b_name else b_name} \n" \
+            "| \n" \
+            f"{cafeteria_name.upper() if player.player_location.name == cafeteria_name else cafeteria_name} --- {k_name.upper() if player.player_location.name == k_name else k_name} \n" \
+            "        \\    / \n" \
+            f"         {y_name.upper() if player.player_location.name == y_name else y_name} \n"
+    )
 
 
 #----Game Loop----
