@@ -9,16 +9,24 @@
 
 
 #Variables
-instructions = "\nWelcome to PRISON ESCAPE \n" \
+INSTRUCTIONS = "\nWelcome to PRISON ESCAPE \n" \
                "Your goal is to escape the prison! \n" \
                "Each playthrough the items to help you escape are randomly littered throughout the rooms \n" \
                "Type restart at anytime to restart \n" \
                "Type quit at anytime to stop playing \n" \
                "Good Luck!!! \n"
 
+STARTING_MAP = "Workshop \n" \
+        "|       \\ \n" \
+        f"Cell --- Bathroom \n" \
+        "| \n" \
+        f"Cafeteria --- Kitchen \n" \
+        "        \\    / \n" \
+        f"         yard \n"
 
 class Room():
-    def __init__(self, description, actions, items, exits):
+    def __init__(self, name, description, actions, items, exits):
+        self.name = name
         self.description = description
         self.actions = actions
         self.items = items
@@ -77,9 +85,35 @@ class Player:
 
     def move_room(self):
         print() #Add space for readability
+
+        #Creating strings for the locations on the map which are mutable. The room you are in shows as ALL CAPS.
+        w_name = workshop.name
+        cell_name = cell.name
+        b_name = bathroom.name
+        cafeteria_name = cafeteria.name
+        k_name = kitchen.name
+        y_name = yard.name
+
+        MAP = f'{w_name.upper() if player.player_location.name == w_name else w_name} \n' \
+                "|       \\ \n" \
+                f"Cell --- Bathroom \n" \
+                "| \n" \
+                f"Cafeteria --- Kitchen \n" \
+                "        \\    / \n" \
+                f"         yard \n"
+
+
         while True:
+            print("You chose to move room")
+            print("----Prison Map----")
+            print(self.player_location.name)
+            print(MAP)
+
+
             for index, value in enumerate(self.player_location.exits):
                 print(f"{index + 1}: {value.capitalize()}")
+            print("or")
+            print(f"{len(self.player_location.exits) + 1}: Stay in {player.player_location.name} \n")
 
             try:
                 choice = int(input("Choose a room to go to: "))
@@ -93,6 +127,9 @@ class Player:
                     self.player_location = self.rooms[chosen_room] #Update player location
                     break
                     
+                elif choice == 4:
+                    break
+
                 else:
                     print(f"Choose option between 1 and {len(self.player_location.exits)}")
 
@@ -114,6 +151,7 @@ class Player:
 
 
 cell = Room(
+    "Cell",
     "You are in your Cell. \nIt's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n", #Description
     ["Check room for items", "Move room", "Talk to cellmate"], #Actions
     ["Sword", "Fork", "Knife"], #Items
@@ -121,6 +159,7 @@ cell = Room(
 )
 
 cafeteria = Room(
+    "Cafeteria",
     "You are in the Cafeteria. \nIt's a loud place with", #Description
     ["Check room for items", "Move room"], #Actions
     [], #Items
@@ -128,6 +167,7 @@ cafeteria = Room(
 )
 
 yard = Room(
+    "Yard",
     "You are in the Yard. \n", #Description
     ["Check room for items", "Move room"], #Actions``
     [], #Items
@@ -135,6 +175,7 @@ yard = Room(
 )
 
 kitchen = Room(
+    "Kitchen",
     "You are in the Kitchen. \n", #Description
     ["Check room for items", "Move room"], #Actions
     [], #Items
@@ -142,6 +183,7 @@ kitchen = Room(
 )
 
 bathroom = Room(
+    "Bathroom",
     "You are in the Bathroom. \n", #Description
     ["Check room for items", "Move room"], #Actions
     [], #Items
@@ -149,6 +191,7 @@ bathroom = Room(
 )
 
 workshop = Room(
+    "Workshop",
     "You are in the Workshop. \n", #Description
     ["Check room for items", "Move room"], #Actions
     [], #Items
@@ -168,7 +211,8 @@ player = Player(rooms["cell"], rooms)
 
 
 #----Game Loop----
-print(instructions) #Give user game instructions
+print(INSTRUCTIONS) #Give user game instructions
+print(STARTING_MAP)
 print(player.player_location.description) #Starting room description
 
 while True:

@@ -11,7 +11,8 @@ Items found in prison:
 Items you can only get from helping prisoners:
     -Screwdriver: Can get from cellmate, if you give him money, you get money from doing a shift in the kitchen.
     -Piece of Metal: Can get from prisoner in the workshop, he left his toothbrush in the bathroom and asks you to get it.
-    -Fireworks: Can get from prisoner in bathroom, if you give him food
+    -Fireworks: Can get from prisoner in bathroom, if you give him food.
+    -If I need to get another item off a person I will make them be in the cafeteria.
         
 Items you can make:
     -Makeshift Weapon: Made by combining toothbrush and piece of metal in the workshop.
@@ -60,5 +61,3 @@ cafeteria - kitchen
        \    /
         yard
 
-capitalize
-capitalize
