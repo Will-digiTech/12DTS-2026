@@ -24,30 +24,34 @@ STARTING_MAP = "Workshop \n" \
         "        \\    / \n" \
         f"         yard \n"
 
+#Constant variables for players actions
+CHECK = "Check room for items"
+MOVE = "Move room"
+TALK = "Talk to prisoner"
 
 #CLASSES
 class Room:
-    def __init__(self, name, description, actions, items, exits, npc):
+    def __init__(self, name, description, actions, items, exits):
         self.name = name
         self.description = description
         self.actions = actions
         self.items = items
         self.exits = exits
-        self.npc = npc
 
     def show_description(self):
         print(self.description)
 
 
 class Player:
-    def __init__(self, player_location, all_rooms):
+    def __init__(self, player_location, all_rooms, all_NPCs):
         self.rooms = all_rooms
+        self.NPC = all_NPCs
 
         self.player_location = player_location
         self.action_functions = {
-            "Check room for items": self.look_around,
-            "Move room": self.move_room,
-            "Talk to NPC": self.talk_to_npc
+            CHECK: self.look_around,
+            MOVE: self.move_room,
+            TALK: self.talk_to_prisoner
         }
 
         self.already_spoken_derek = False
@@ -55,36 +59,24 @@ class Player:
 
     def action(self):
         while True:
-            print(self.player_location.actions)
             for index, action in enumerate(self.player_location.actions):
                 print(f"{index + 1}: {action}")
 
             try:
                 choice = int(input("Choose action: "))
 
-                if 1 <= choice <= len(self.player_location.actions):
+                if 1 <= choice <= len(self.player_location.actions): #Check if user's choice is one of avaliable options
                     action_name = self.player_location.actions[choice - 1]
-                    print(action_name)
                     action_function = self.action_functions[action_name]
-
+                    print(action_function)
                     action_function()
+
+                else:
+                    print(f"Please choose valid number between 1 - {len(player.player_location.actions)} \n")
 
             except ValueError:
                 print("Please input a valid number")
                 continue
-
-            # if choice == 1:
-            #     print("You chose to look around\n")
-            #     self.look_around()
-            # elif choice == 2:
-            #     print("You chose to move room \n")
-            #     self.move_room()
-            # elif choice == 3:
-            #     print("You chose talk to prisoner\n")
-            #     self.talk_to_npc()
-            # else:
-            #     print()
-            #     continue
 
             break
 
@@ -141,75 +133,76 @@ class Player:
         print() #Add space for readability
         print(self.player_location.description) #Print new location to terminal
 
+    def talk_to_prisoner(self):
+        pass
 
-    def talk_to_npc(self):
+
+class NPC:
+    def __init__(self, name, dialogue, item):
+        self.name = name
+        self.dialogue = dialogue
+        self.item = item
+        self.already_spoken_to = False
+
+
+
         #Check if player has already spoken to NPC
-        if self.already_spoken_derek:
-            print(self.player_location.npc["dialogue"][1])
-        else:
-            print(self.player_location.npc["dialogue"][0])
-
-        self.already_spoken_derek = True
-        print() #Add space for readability
+        # if self.already_spoken_to:
+        #     print(self.dialogue[1])
+        # else:
+        #     print(self.dialogue[0])
+        #
+        # self.already_spoken_to = True
+        # print() #Add space for readability
 
 
 
 cell = Room(
     "Cell",
     "You are in your Cell. \nIt's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n", #Description
-    ["Check room for items", "Move room", "Talk to cellmate"], #Actions
+    [CHECK, MOVE, TALK], #Actions
     ["Sword", "Fork", "Knife"], #Items
-    ["workshop", "bathroom", "cafeteria"], #Exits
-    {
-        "name": "Derek",
-        "dialogue": ["Yo, Derek is me. I got a mission for you. If you get me some cash i'll give you a screwdriver. Get money from doing a shift in the Kitchen then get back to me.", "I already told you go get me money from a shift in the Kitchen and you can have the screwdriver. "],
-        "item": "screwdriver"
-    }
+    ["workshop", "bathroom", "cafeteria"] #Exits
 )
 
 cafeteria = Room(
     "Cafeteria",
     "You are in the Cafeteria. \nIt's a loud place with", #Description
-    ["Check room for items", "Move room"], #Actions
+    [CHECK, MOVE], #Actions
     [], #Items
-    ["cell", "yard", "kitchen"], #Exits
-    {} # NPC's
+    ["cell", "yard", "kitchen"] #Exits
 )
 
 yard = Room(
     "Yard",
     "You are in the Yard. \n", #Description
-    ["Check room for items", "Move room"], #Actions
+    [CHECK, MOVE], #Actions
     [], #Items
-    ["cafeteria", "kitchen"], #Exits
-    {} #NPC's
+    ["cafeteria", "kitchen"] #Exits
 )
 
 kitchen = Room(
     "Kitchen",
     "You are in the Kitchen. \n", #Description
-    ["Check room for items", "Move room"], #Actions
+    [CHECK, MOVE], #Actions
     [], #Items
-    ["cafeteria", "yard"], #Exits
-    {} #NPC's
+    ["cafeteria", "yard"] #Exits
 )
 
 bathroom = Room(
     "Bathroom",
     "You are in the Bathroom. \n", #Description
-    ["Check room for items", "Move room"], #Actions
+    [CHECK, MOVE], #Actions
     [], #Items
-    ["cell", "workshop"], #Exits
-    {} #NPC's
+    ["cell", "workshop"] #Exits
 )
 
 workshop = Room(
     "Workshop",
     "You are in the Workshop. \n", #Description
-    ["Check room for items", "Move room"], #Actions
+    [CHECK, MOVE], #Actions
     [], #Items
-    ["cell", "bathroom"], #Exits
-    {} #NPC's
+    ["cell", "bathroom"] #Exits
 )
 
 rooms = {
@@ -221,8 +214,32 @@ rooms = {
     "workshop": workshop
 }
 
-player = Player(rooms["cell"], rooms)
 
+Derek_NPC = NPC(
+    "Derek",
+    ["Yo, Derek is me. I got a mission for you. If you get me some cash i'll give you a screwdriver. Get money from doing a shift in the Kitchen then get back to me.", "I already told you go get me money from a shift in the Kitchen and you can have the screwdriver. "],
+    "screwdriver"
+)
+
+Joel_NPC = NPC(
+    "Joel",
+    ["", ""],
+    "metal"
+)
+
+Bob_NPC = NPC(
+    "Bob",
+    ["",""],
+    "fireworks"
+)
+
+all_NPCs = {
+    "Derek": Derek_NPC,
+    "Joel": Joel_NPC,
+    "Bob": Bob_NPC
+}
+
+player = Player(rooms["cell"], rooms, all_NPCs)
 
 #FUNCTIONS
 def show_map():
@@ -256,6 +273,7 @@ def clear_screen():
 clear_screen()
 print(INSTRUCTIONS) #Give user game instructions
 print(STARTING_MAP)
+print(player.player_location)
 print(player.player_location.description) #Starting room description
 
 
