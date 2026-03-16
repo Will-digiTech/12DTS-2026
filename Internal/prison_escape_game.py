@@ -44,34 +44,47 @@ class Player:
         self.rooms = all_rooms
 
         self.player_location = player_location
+        self.action_functions = {
+            "Check room for items": self.look_around,
+            "Move room": self.move_room,
+            "Talk to NPC": self.talk_to_npc
+        }
 
         self.already_spoken_derek = False
 
 
     def action(self):
         while True:
+            print(self.player_location.actions)
             for index, action in enumerate(self.player_location.actions):
                 print(f"{index + 1}: {action}")
 
             try:
                 choice = int(input("Choose action: "))
 
+                if 1 <= choice <= len(self.player_location.actions):
+                    action_name = self.player_location.actions[choice - 1]
+                    print(action_name)
+                    action_function = self.action_functions[action_name]
+
+                    action_function()
+
             except ValueError:
                 print("Please input a valid number")
                 continue
 
-            if choice == 1:
-                print("You chose to look around\n")
-                self.look_around()
-            elif choice == 2:
-                print("You chose to move room \n")
-                self.move_room()
-            elif choice == 3:
-                print("You chose talk to prisoner\n")
-                self.talk_to_npc()
-            else:
-                print()
-                continue
+            # if choice == 1:
+            #     print("You chose to look around\n")
+            #     self.look_around()
+            # elif choice == 2:
+            #     print("You chose to move room \n")
+            #     self.move_room()
+            # elif choice == 3:
+            #     print("You chose talk to prisoner\n")
+            #     self.talk_to_npc()
+            # else:
+            #     print()
+            #     continue
 
             break
 
@@ -160,7 +173,7 @@ cafeteria = Room(
     ["Check room for items", "Move room"], #Actions
     [], #Items
     ["cell", "yard", "kitchen"], #Exits
-    {}
+    {} # NPC's
 )
 
 yard = Room(
@@ -169,7 +182,7 @@ yard = Room(
     ["Check room for items", "Move room"], #Actions
     [], #Items
     ["cafeteria", "kitchen"], #Exits
-    {} #Exits
+    {} #NPC's
 )
 
 kitchen = Room(
@@ -178,7 +191,7 @@ kitchen = Room(
     ["Check room for items", "Move room"], #Actions
     [], #Items
     ["cafeteria", "yard"], #Exits
-    {} #Exits
+    {} #NPC's
 )
 
 bathroom = Room(
@@ -187,7 +200,7 @@ bathroom = Room(
     ["Check room for items", "Move room"], #Actions
     [], #Items
     ["cell", "workshop"], #Exits
-    {} #Exits
+    {} #NPC's
 )
 
 workshop = Room(
@@ -196,7 +209,7 @@ workshop = Room(
     ["Check room for items", "Move room"], #Actions
     [], #Items
     ["cell", "bathroom"], #Exits
-    {}
+    {} #NPC's
 )
 
 rooms = {
