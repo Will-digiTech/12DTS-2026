@@ -100,7 +100,7 @@ class Player:
             for index, value in enumerate(self.player_location.exits):
                 print(f"{index + 1}: {value.capitalize()}")
             print("or")
-            print(f"{len(self.player_location.exits) + 1}: Stay in {player.player_location.name} \n")
+            print(f"{len(self.player_location.exits) + 1}: Stay in {self.player_location.name} \n")
 
             try:
                 choice = int(input("Choose a room to go to: "))
@@ -114,7 +114,7 @@ class Player:
                     self.player_location = self.rooms[chosen_room] #Update player location
                     break
 
-                elif choice == 4:
+                elif choice == len(self.player_location.exits) + 1:
                     break
 
                 else:
