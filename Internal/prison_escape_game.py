@@ -31,21 +31,21 @@ TALK = "Talk to prisoner"
 
 #CLASSES
 class Room:
-    def __init__(self, name, description, actions, items, exits):
+    def __init__(self, name, description, actions, items, exits, npcs=None):
         self.name = name
         self.description = description
         self.actions = actions
         self.items = items
         self.exits = exits
+        self.npcs = npcs if npcs else []
 
     def show_description(self):
         print(self.description)
 
 
 class Player:
-    def __init__(self, player_location, all_rooms, all_NPCs):
+    def __init__(self, player_location, all_rooms):
         self.rooms = all_rooms
-        self.NPC = all_NPCs
 
         self.player_location = player_location
         self.action_functions = {
@@ -68,7 +68,6 @@ class Player:
                 if 1 <= choice <= len(self.player_location.actions): #Check if user's choice is one of avaliable options
                     action_name = self.player_location.actions[choice - 1]
                     action_function = self.action_functions[action_name]
-                    print(action_function)
                     action_function()
 
                 else:
@@ -134,7 +133,12 @@ class Player:
         print(self.player_location.description) #Print new location to terminal
 
     def talk_to_prisoner(self):
-        pass
+        #WRITE CODE FOR TALKING TO PRISONERS
+        #THIS IS HOW WE ACCESS VARIABLES FROM THE NPC CLASS
+        print(self.player_location.npcs.name)
+        print(self.player_location.npcs.item)
+        print(self.player_location.npcs.dialogue)
+        print(self.player_location.npcs.already_spoken_to)
 
 
 class NPC:
@@ -155,66 +159,7 @@ class NPC:
         # self.already_spoken_to = True
         # print() #Add space for readability
 
-
-
-cell = Room(
-    "Cell",
-    "You are in your Cell. \nIt's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n", #Description
-    [CHECK, MOVE, TALK], #Actions
-    ["Sword", "Fork", "Knife"], #Items
-    ["workshop", "bathroom", "cafeteria"] #Exits
-)
-
-cafeteria = Room(
-    "Cafeteria",
-    "You are in the Cafeteria. \nIt's a loud place with", #Description
-    [CHECK, MOVE], #Actions
-    [], #Items
-    ["cell", "yard", "kitchen"] #Exits
-)
-
-yard = Room(
-    "Yard",
-    "You are in the Yard. \n", #Description
-    [CHECK, MOVE], #Actions
-    [], #Items
-    ["cafeteria", "kitchen"] #Exits
-)
-
-kitchen = Room(
-    "Kitchen",
-    "You are in the Kitchen. \n", #Description
-    [CHECK, MOVE], #Actions
-    [], #Items
-    ["cafeteria", "yard"] #Exits
-)
-
-bathroom = Room(
-    "Bathroom",
-    "You are in the Bathroom. \n", #Description
-    [CHECK, MOVE], #Actions
-    [], #Items
-    ["cell", "workshop"] #Exits
-)
-
-workshop = Room(
-    "Workshop",
-    "You are in the Workshop. \n", #Description
-    [CHECK, MOVE], #Actions
-    [], #Items
-    ["cell", "bathroom"] #Exits
-)
-
-rooms = {
-    "cell": cell,
-    "cafeteria": cafeteria,
-    "yard": yard,
-    "kitchen": kitchen,
-    "bathroom": bathroom,
-    "workshop": workshop
-}
-
-
+#NPC CLASS OBJECTS
 Derek_NPC = NPC(
     "Derek",
     ["Yo, Derek is me. I got a mission for you. If you get me some cash i'll give you a screwdriver. Get money from doing a shift in the Kitchen then get back to me.", "I already told you go get me money from a shift in the Kitchen and you can have the screwdriver. "],
@@ -233,13 +178,70 @@ Bob_NPC = NPC(
     "fireworks"
 )
 
-all_NPCs = {
-    "Derek": Derek_NPC,
-    "Joel": Joel_NPC,
-    "Bob": Bob_NPC
+#ROOM CLASS OBJECTS
+cell = Room(
+    "cell",
+    "You are in your Cell. \nIt's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n", #Description
+    [CHECK, MOVE, TALK], #Actions
+    ["Sword", "Fork", "Knife"], #Items
+    ["workshop", "bathroom", "cafeteria"], #Exits
+    npcs=Derek_NPC
+)
+
+cafeteria = Room(
+    "cafeteria",
+    "You are in the Cafeteria. \nIt's a loud place with", #Description
+    [CHECK, MOVE], #Actions
+    [], #Items
+    ["cell", "yard", "kitchen"] #Exits
+)
+
+yard = Room(
+    "yard",
+    "You are in the Yard. \n", #Description
+    [CHECK, MOVE], #Actions
+    [], #Items
+    ["cafeteria", "kitchen"] #Exits
+)
+
+kitchen = Room(
+    "kitchen",
+    "You are in the Kitchen. \n", #Description
+    [CHECK, MOVE], #Actions
+    [], #Items
+    ["cafeteria", "yard"] #Exits
+)
+
+bathroom = Room(
+    "bathroom",
+    "You are in the Bathroom. \n", #Description
+    [CHECK, MOVE, TALK], #Actions
+    [], #Items
+    ["cell", "workshop"], #Exits
+    npcs=Bob_NPC
+)
+
+workshop = Room(
+    "workshop",
+    "You are in the Workshop. \n", #Description
+    [CHECK, MOVE, TALK], #Actions
+    [], #Items
+    ["cell", "bathroom"], #Exits
+    npcs=Joel_NPC
+)
+
+rooms = {
+    "cell": cell,
+    "cafeteria": cafeteria,
+    "yard": yard,
+    "kitchen": kitchen,
+    "bathroom": bathroom,
+    "workshop": workshop
 }
 
-player = Player(rooms["cell"], rooms, all_NPCs)
+
+#PLAYER CLASS OBJECT
+player = Player(rooms["cell"], rooms)
 
 #FUNCTIONS
 def show_map():
@@ -273,7 +275,6 @@ def clear_screen():
 clear_screen()
 print(INSTRUCTIONS) #Give user game instructions
 print(STARTING_MAP)
-print(player.player_location)
 print(player.player_location.description) #Starting room description
 
 
