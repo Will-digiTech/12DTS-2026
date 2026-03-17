@@ -133,12 +133,16 @@ class Player:
         print(self.player_location.description) #Print new location to terminal
 
     def talk_to_prisoner(self):
-        #WRITE CODE FOR TALKING TO PRISONERS
-        #THIS IS HOW WE ACCESS VARIABLES FROM THE NPC CLASS
-        print(self.player_location.npcs.name)
-        print(self.player_location.npcs.item)
-        print(self.player_location.npcs.dialogue)
-        print(self.player_location.npcs.already_spoken_to)
+        dialogue = self.player_location.npcs.dialogue
+        already_spoken_to = self.player_location.npcs.already_spoken_to
+
+        print() #Add space for readability
+        if already_spoken_to:
+            print(dialogue[1]) # Print second script if user has already spoken to npc
+        else:
+            print(dialogue[0]) # Print first dialogue if first time talking to npc
+
+        self.player_location.npcs.already_spoken_to = True
 
 
 class NPC:
@@ -147,8 +151,6 @@ class NPC:
         self.dialogue = dialogue
         self.item = item
         self.already_spoken_to = False
-
-
 
         #Check if player has already spoken to NPC
         # if self.already_spoken_to:
@@ -162,7 +164,8 @@ class NPC:
 #NPC CLASS OBJECTS
 Derek_NPC = NPC(
     "Derek",
-    ["Yo, Derek is me. I got a mission for you. If you get me some cash i'll give you a screwdriver. Get money from doing a shift in the Kitchen then get back to me.", "I already told you go get me money from a shift in the Kitchen and you can have the screwdriver. "],
+    ["Yo, Derek is me. I got a mission for you. If you get me some cash i'll give you a screwdriver. Get money from doing a shift in the Kitchen then get back to me. \n",
+     "I already told you go get me money from a shift in the Kitchen and you can have the screwdriver. \n"],
     "screwdriver"
 )
 
