@@ -132,6 +132,7 @@ class Player:
         print() #Add space for readability
         print(self.player_location.description) #Print new location to terminal
 
+
     def talk_to_prisoner(self):
         dialogue = self.player_location.npcs.dialogue
         already_spoken_to = self.player_location.npcs.already_spoken_to
@@ -152,14 +153,6 @@ class NPC:
         self.item = item
         self.already_spoken_to = False
 
-        #Check if player has already spoken to NPC
-        # if self.already_spoken_to:
-        #     print(self.dialogue[1])
-        # else:
-        #     print(self.dialogue[0])
-        #
-        # self.already_spoken_to = True
-        # print() #Add space for readability
 
 #NPC CLASS OBJECTS
 Derek_NPC = NPC(
@@ -171,13 +164,15 @@ Derek_NPC = NPC(
 
 Joel_NPC = NPC(
     "Joel",
-    ["", ""],
-    "metal"
+    ["Hey man, I'm Joel. Look, I'm super busy at the moment and have a little task for you. I left my toothbrush in the bathroom, if you go and get it for me, i'll give you a piece of scrap metal which is great for crafting items. \n",
+     "Get back to me when you have my toothbrush and i'll give you the scrap metal. \n"],
+    "scrap metal"
 )
 
 Bob_NPC = NPC(
     "Bob",
-    ["",""],
+    ["Hello there! It's me BOB. Everyone hates me in the cafeteria, could you please please please go get me some food. If you do I'll give you this firework!!! \n",
+     "I'm begging you man please get me some food I'm starving! Then you can have the firework. It's perfect for a good distraction. \n"],
     "fireworks"
 )
 
