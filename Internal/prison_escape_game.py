@@ -6,6 +6,8 @@
 #Hold a maximum of 3 items, hide item under bed to get rid of item or use it
 #Rooms that you can only get to with specific items, such as vents with a screwdriver
 
+#LIBRARIES
+import random
 import os
 
 #VARIABLES
@@ -28,6 +30,7 @@ STARTING_MAP = "Workshop \n" \
 CHECK = "Check room for items"
 MOVE = "Move room"
 TALK = "Talk to prisoner"
+SHIFT = "Start shift"
 
 #CLASSES
 class Room:
@@ -51,7 +54,8 @@ class Player:
         self.action_functions = {
             CHECK: self.look_around,
             MOVE: self.move_room,
-            TALK: self.talk_to_prisoner
+            TALK: self.talk_to_prisoner,
+            SHIFT: self.do_shift
         }
 
         self.already_spoken_derek = False
@@ -146,11 +150,32 @@ class Player:
         self.player_location.npcs.already_spoken_to = True
 
 
+    def do_shift(self):
+        print() #Add space for readibility
+        print("You started your shift in the Kitchen")
+
+        #MINI GAME to complete kitchen shift
+        anagram_foods = ["TOMATO", "CHEESE", "APPLE", "MILK", "POTATO", "BREAD"] #All possible foods for anagrams
+        chosen_food = random.choice(anagram_foods) #Choose random food from list
+        list_food = list(chosen_food) #Turn the immutable string into a list
+        random.shuffle(list_food) #Shuffle characters in list
+        anagram = "".join(list_food) #Join shuffled list into string
+        print(anagram) #Print shuffled word
+
+        try:
+            guess = input("Enter correct spelling for this food")
+
+        except ValueError:
+            print("Please enter a valid word")
+
+
+
+
 class NPC:
     def __init__(self, name, dialogue, item):
         self.name = name
         self.dialogue = dialogue
-        self.item = item
+        self.required_item = item
         self.already_spoken_to = False
 
 
@@ -180,7 +205,7 @@ Bob_NPC = NPC(
 cell = Room(
     "cell",
     "You are in your Cell. \nIt's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n", #Description
-    [CHECK, MOVE, TALK], #Actions
+    [CHECK, MOVE, TALK, SHIFT], #Actions
     ["Sword", "Fork", "Knife"], #Items
     ["workshop", "bathroom", "cafeteria"], #Exits
     npcs=Derek_NPC
