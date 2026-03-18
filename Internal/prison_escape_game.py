@@ -151,34 +151,54 @@ class Player:
 
 
     def do_shift(self):
+        # MINI GAME to complete kitchen shift
+        correct_food_counter = 0
+        num_of_lifes = 1 #Changable later if I want to give more lives
+        anagram_foods = ["TOMATO", "CHEESE", "APPLE", "MILK", "POTATO", "BREAD"] #All possible foods for anagrams
+
         print() #Add space for readibility
         print("You started your shift in the Kitchen")
+        print("You must solve these anagrams by typing the correct food.")
+        print("You must get 5 correct to finish your shift")
+        print(f"You have have {num_of_lifes} life, if you fail you get kicked off your shift and earn no money.")
 
-        #MINI GAME to complete kitchen shift
-        anagram_foods = ["TOMATO", "CHEESE", "APPLE", "MILK", "POTATO", "BREAD"] #All possible foods for anagrams
-        chosen_food = random.choice(anagram_foods) #Choose random food from list
-        list_food = list(chosen_food) #Turn the immutable string into a list
-        random.shuffle(list_food) #Shuffle characters in list
-        anagram = "".join(list_food) #Join shuffled list into string
+    
+        while correct_food_counter < 5:
+            chosen_food = random.choice(anagram_foods) #Choose random food from list
+            list_food = list(chosen_food) #Turn the immutable string into a list
+            random.shuffle(list_food) #Shuffle characters in list
+            anagram = "".join(list_food) #Join shuffled list into string
 
+            #Repeat until valid user entry
+            while True:
+                try:
+                    print(anagram)
+                    guess = input("Guess the food \n>")
+                    if guess.isdigit():
+                        raise ValueError
+                    else:
+                        break   
 
+                except ValueError:
+                    print("Please enter a valid word")
+                    continue
 
-        while True:
-            try:
-                print(anagram)
-                guess = input("Guess the food \n>")
-                if guess.isdigit():
-                    raise ValueError
-                elif guess.lower() == chosen_food.lower():
-                    print("You guessed correct")
+            #Mini-game logic
+            if guess.lower() == chosen_food.lower():
+                correct_food_counter += 1
+                anagram_foods.remove(chosen_food)
+
+                print("You guessed correct")
+                print(anagram_foods)
+                print(f"{correct_food_counter}/5 completed \n")
+                
+            else:
+                num_of_lifes - 1
+                print("You guessed incorrect!")
+                if num_of_lifes > 0:
+                    print(f"You have used a life, you have {num_of_lifes} remaining")
                 else:
-                    print("You guessed incorrect! ")
-                
-                
-
-            except ValueError:
-                print("Please enter a valid word")
-                continue
+                    print("You failed your shift!")
 
 
 
