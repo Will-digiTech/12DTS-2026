@@ -160,13 +160,19 @@ class Player:
         list_food = list(chosen_food) #Turn the immutable string into a list
         random.shuffle(list_food) #Shuffle characters in list
         anagram = "".join(list_food) #Join shuffled list into string
-        print(anagram) #Print shuffled word
 
-        try:
-            guess = input("Enter correct spelling for this food")
+        while True:
+            try:
+                print(anagram)
+                guess = input("Guess the food \n>")
+                if guess.isdigit():
+                    raise ValueError
+                
+                
 
-        except ValueError:
-            print("Please enter a valid word")
+            except ValueError:
+                print("Please enter a valid word")
+                continue
 
 
 
