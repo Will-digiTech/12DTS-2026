@@ -161,12 +161,18 @@ class Player:
         random.shuffle(list_food) #Shuffle characters in list
         anagram = "".join(list_food) #Join shuffled list into string
 
+
+
         while True:
             try:
                 print(anagram)
                 guess = input("Guess the food \n>")
                 if guess.isdigit():
                     raise ValueError
+                elif guess.lower() == chosen_food.lower():
+                    print("You guessed correct")
+                else:
+                    print("You guessed incorrect! ")
                 
                 
 
