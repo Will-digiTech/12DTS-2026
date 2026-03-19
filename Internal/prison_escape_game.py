@@ -9,6 +9,7 @@
 #LIBRARIES
 import random
 import os
+import time
 
 #VARIABLES
 INSTRUCTIONS = "\nWelcome to PRISON ESCAPE \n" \
@@ -30,7 +31,8 @@ STARTING_MAP = "Workshop \n" \
 CHECK = "Check room for items"
 MOVE = "Move room"
 TALK = "Talk to prisoner"
-SHIFT = "Start shift"
+KITCHEN_SHIFT = "Start Kitchen shift"
+WORKSHOP_SHIFT  = "Start Workshop shift"
 
 #CLASSES
 class Room:
@@ -55,8 +57,11 @@ class Player:
             CHECK: self.look_around,
             MOVE: self.move_room,
             TALK: self.talk_to_prisoner,
-            SHIFT: self.do_shift
+            KITCHEN_SHIFT: self.kitchen_shift,
+            WORKSHOP_SHIFT: self.workshop_shift,
         }
+
+        self.money = 0
 
         self.already_spoken_derek = False
 
@@ -150,17 +155,17 @@ class Player:
         self.player_location.npcs.already_spoken_to = True
 
 
-    def do_shift(self):
+    def kitchen_shift(self):
         # MINI GAME to complete kitchen shift
         correct_food_counter = 0
-        num_of_lifes = 1 #Changable later if I want to give more lives
+        num_of_lifes = 2 #Changable later if I want to give more lives
         anagram_foods = ["TOMATO", "CHEESE", "APPLE", "MILK", "POTATO", "BREAD"] #All possible foods for anagrams
 
         print() #Add space for readibility
         print("You started your shift in the Kitchen")
         print("You must solve these anagrams by typing the correct food.")
         print("You must get 5 correct to finish your shift")
-        print(f"You have have {num_of_lifes} life, if you fail you get kicked off your shift and earn no money.")
+        print(f"You have have {num_of_lifes} lives, if you fail you get kicked off your shift and earn no money.")
 
     
         while correct_food_counter < 5:
@@ -193,13 +198,74 @@ class Player:
                 print(f"{correct_food_counter}/5 completed \n")
                 
             else:
-                num_of_lifes - 1
+                num_of_lifes -= 1
                 print("You guessed incorrect!")
-                if num_of_lifes > 0:
-                    print(f"You have used a life, you have {num_of_lifes} remaining")
+                if num_of_lifes == 0:
+                    print("You failed your shift!\n")
+                    return
                 else:
-                    print("You failed your shift!")
+                    print(f"You have used a life, you have {num_of_lifes} remaining")
 
+        self.money += 5
+        print("Congratulations you completed your shift and earnt 5 dollars")
+        print(f"You now have ${self.money} in total")
+
+    def workshop_shift(self):
+        #MINI GAME to complete workshop shift
+        completed_num_plates = 0
+        num_of_lives = 2
+        allowed_time = 1
+
+        print() #Add space for readibility
+        print("You started your shift in the Workshop")
+        print("You will get given a number plate back to front and you must type it the correct way")
+        print("For example you might be given '321CBA' and you must type 'ABC123")
+        print(f"You have {allowed_time} seconds to type it or you fail your shift")
+        print("Complete 5 number plates to complete your shift")
+        print(f"You have {num_of_lives} lives good luck!\n")
+        input("Press enter to start\n")
+
+        while completed_num_plates < 5:
+            print("\nStarting in ...")
+            print("3")
+            time.sleep(1)
+            print("2")
+            time.sleep(1)
+            print("1 \n")
+            time.sleep(1)
+
+            number_plate_letters = "".join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ', k=3))
+            number_plate_numbers = "".join(random.choices('1234567890', k=3))
+            number_plate = number_plate_letters + number_plate_numbers
+
+            print("Backwards number plate:")
+            print(number_plate[::-1]) #Backwards number plate
+            print("Correct number plate:")
+            start = time.time()
+            user_input = input("> ")
+            end = time.time()
+            elapsed_time = round(end - start, 2)
+
+            if elapsed_time < allowed_time:
+                if user_input.upper() == number_plate:
+                    print("You got it")
+                else:
+                    num_of_lives -= 1
+                    print("You typed it out incorrectly")
+                    print(f"You have {num_of_lives} lives remaining")
+            else:
+                num_of_lives -= 1
+                print("You ran out of time")
+                print(f"It took you {elapsed_time} seconds")
+                print(f"You have {num_of_lives} lives remaining")
+
+            if num_of_lives < 0:
+                print("You failed your shift!")
+                return
+
+            
+            
+            
 
 
 
@@ -237,7 +303,7 @@ Bob_NPC = NPC(
 cell = Room(
     "cell",
     "You are in your Cell. \nIt's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n", #Description
-    [CHECK, MOVE, TALK, SHIFT], #Actions
+    [CHECK, MOVE, TALK, WORKSHOP_SHIFT], #Actions
     ["Sword", "Fork", "Knife"], #Items
     ["workshop", "bathroom", "cafeteria"], #Exits
     npcs=Derek_NPC
@@ -262,7 +328,7 @@ yard = Room(
 kitchen = Room(
     "kitchen",
     "You are in the Kitchen. \n", #Description
-    [CHECK, MOVE], #Actions
+    [CHECK, MOVE, KITCHEN_SHIFT], #Actions
     [], #Items
     ["cafeteria", "yard"] #Exits
 )
