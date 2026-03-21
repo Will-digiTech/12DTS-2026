@@ -62,6 +62,7 @@ class Player:
         }
 
         self.money = 0
+        self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
         self.already_spoken_derek = False
 
@@ -156,6 +157,10 @@ class Player:
 
 
     def kitchen_shift(self):
+        if self.last_shift == KITCHEN_SHIFT:
+            print("\nYou can't do the same shift twice in a row, choose a different shift\n")
+            return
+
         # MINI GAME to complete kitchen shift
         correct_food_counter = 0
         num_of_lifes = 2 #Changable later if I want to give more lives
@@ -173,6 +178,9 @@ class Player:
             list_food = list(chosen_food) #Turn the immutable string into a list
             random.shuffle(list_food) #Shuffle characters in list
             anagram = "".join(list_food) #Join shuffled list into string
+
+            if anagram == chosen_food: #If the anagram is the same as the original word, shuffle again
+                continue
 
             #Repeat until valid user entry
             while True:
@@ -202,31 +210,38 @@ class Player:
                 print("You guessed incorrect!")
                 if num_of_lifes == 0:
                     print("You failed your shift!\n")
+                    self.last_shift = KITCHEN_SHIFT #Update last shift to stop player doing same shift twice in a row
                     return
                 else:
                     print(f"You have used a life, you have {num_of_lifes} remaining")
 
         self.money += 5
+        self.last_shift = KITCHEN_SHIFT #Update last shift to stop player doing same shift twice in a row
         print("Congratulations you completed your shift and earnt 5 dollars")
         print(f"You now have ${self.money} in total")
 
     def workshop_shift(self):
+        if self.last_shift == WORKSHOP_SHIFT:
+            print("\nYou can't do the same shift twice in a row, choose a different shift\n")
+            return
+
         #MINI GAME to complete workshop shift
         completed_num_plates = 0
         num_of_lives = 2
-        allowed_time = 1
+        allowed_time = 7
+        num_to_complete = 5
 
         print() #Add space for readibility
         print("You started your shift in the Workshop")
         print("You will get given a number plate back to front and you must type it the correct way")
-        print("For example you might be given '321CBA' and you must type 'ABC123")
+        print("For example you might be given '321CBA' and you must type 'ABC123'")
         print(f"You have {allowed_time} seconds to type it or you fail your shift")
-        print("Complete 5 number plates to complete your shift")
+        print(f"Complete {num_to_complete} number plates to complete your shift")
         print(f"You have {num_of_lives} lives good luck!\n")
         input("Press enter to start\n")
 
-        while completed_num_plates < 5:
-            print("\nStarting in ...")
+        while completed_num_plates < num_to_complete:
+            print("Starting in ...")
             print("3")
             time.sleep(1)
             print("2")
@@ -248,26 +263,33 @@ class Player:
 
             if elapsed_time < allowed_time:
                 if user_input.upper() == number_plate:
+                    completed_num_plates += 1
                     print("You got it")
+                    print(f"It took you {elapsed_time} seconds")
+                    print(f"Completed number plates : {completed_num_plates}/{num_to_complete} \n")
                 else:
                     num_of_lives -= 1
                     print("You typed it out incorrectly")
-                    print(f"You have {num_of_lives} lives remaining")
+                    print(f"You have {num_of_lives} lives remaining \n")
             else:
                 num_of_lives -= 1
                 print("You ran out of time")
                 print(f"It took you {elapsed_time} seconds")
-                print(f"You have {num_of_lives} lives remaining")
+                print(f"You have {num_of_lives} lives remaining \n")
 
-            if num_of_lives < 0:
-                print("You failed your shift!")
+            if num_of_lives == 0:
+                print("You failed your shift! \n")
+                self.last_shift = WORKSHOP_SHIFT #Update last shift to stop player doing same shift twice in a row
                 return
+            
+        self.money += 5
+        self.last_shift = WORKSHOP_SHIFT #Update last shift to stop player doing same shift twice in a row
+        print("You successfully completed your shift and earnt 5 dollars!")
+        print(f"You now have ${self.money} in total \n")
 
             
             
             
-
-
 
 class NPC:
     def __init__(self, name, dialogue, item):
@@ -280,7 +302,7 @@ class NPC:
 #NPC CLASS OBJECTS
 Derek_NPC = NPC(
     "Derek",
-    ["Yo, Derek is me. I got a mission for you. If you get me some cash i'll give you a screwdriver. Get money from doing a shift in the Kitchen then get back to me. \n",
+    ["Yo, Derek is me. I got a mission for you. If you get me 10 dollars i'll give you a screwdriver. Get money from doing a shift in the Kitchen or Workshop then get back to me. \n",
      "I already told you go get me money from a shift in the Kitchen and you can have the screwdriver. \n"],
     "screwdriver"
 )
