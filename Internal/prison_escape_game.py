@@ -228,7 +228,6 @@ class Player:
                 anagram_foods.remove(chosen_food)
 
                 print("You guessed correct")
-                print(anagram_foods)
                 print(f"{correct_food_counter}/5 completed \n")
                 
             else:
@@ -312,12 +311,20 @@ class Player:
         print("To succesfully take someones food you must press the enter button within a timeframe between 8 - 10 seconds")
         print("You must count in your head then press enter when you think the timer is between 8 and 10 seconds")
         print("Good luck! \n")
+        input("Press enter to start\n")
 
         self.countdown()
 
         start = time.time()
-
+        user_input = input("Press enter between 8 and 10 seconds. \n>")
         end = time.time()
+        elapsed_time = round(end - start, 2)
+
+        print(elapsed_time)
+        if 8 <= elapsed_time <= 10:
+            print("Hola soy Dora")
+        else:
+            print("Yo trash brotato chip")
 
         print(start, end)
 
