@@ -33,6 +33,7 @@ MOVE = "Move room"
 TALK = "Talk to prisoner"
 KITCHEN_SHIFT = "Start Kitchen shift"
 WORKSHOP_SHIFT  = "Start Workshop shift"
+STEAL_FOOD = "Steal food"
 
 #CLASSES
 class Room:
@@ -59,6 +60,7 @@ class Player:
             TALK: self.talk_to_prisoner,
             KITCHEN_SHIFT: self.kitchen_shift,
             WORKSHOP_SHIFT: self.workshop_shift,
+            STEAL_FOOD: self.steal_food
         }
 
         self.inventory = []
@@ -70,8 +72,7 @@ class Player:
 
     def action(self):
         while True:
-            for index, action in enumerate(self.player_location.actions):
-                print(f"{index + 1}: {action}")
+            indexed_loop(self.player_location.actions)
 
             try:
                 choice = int(input("Choose action: "))
@@ -94,15 +95,37 @@ class Player:
     def look_around(self):
         if len(self.player_location.items) > 1:
             joined_items = ", ".join(self.player_location.items[:-1]) + ' and ' + self.player_location.items[-1] #Displays items found in Enlgish
-            print(f"\nYou see a {joined_items}")
+            print(f"\nYou see a {joined_items}\n")
+
+            self.pick_up_item()
 
         elif self.player_location.items:
-            print(f"\nYou see a {self.player_location.items[0]}")
+            print(f"\nYou see a {self.player_location.items[0]}\n")
 
+            self.pick_up_item()
         else:
-            print("\nYou don't find anything")
+            print("\nYou don't find anything\n")
 
         print() #Add space for readability
+
+
+    def pick_up_item(self):
+        print("Would you like to pick an item up?")
+        while True:
+            choice = input("Yes/No \n>").lower()
+            if choice == "yes":
+                indexed_loop(self.player_location.items)
+
+                break
+            elif choice == "no":
+                print("NOO")
+
+                break
+            else:
+                print("Enter Yes or No")
+                continue
+        print(self.player_location.items)
+
 
 
     def move_room(self):
@@ -112,8 +135,7 @@ class Player:
             print("----Prison Map----")
             show_map()
 
-            for index, value in enumerate(self.player_location.exits):
-                print(f"{index + 1}: {value.capitalize()}")
+            indexed_loop(self.player_location.exits)
             print("or")
             print(f"{len(self.player_location.exits) + 1}: Stay in {self.player_location.name} \n")
 
@@ -160,7 +182,7 @@ class Player:
                     self.money -= requirement
                     self.inventory.append(reward)
                     print(dialogue["after_exchange"]) #Print dialogue for when you give npc required item
-                    print(f"-{requirement}")
+                    print(f"-${requirement}")
                     print(f"+{reward} \n")
                     self.show_inventory()
                     return
@@ -246,6 +268,7 @@ class Player:
         print(f"You now have ${self.money} in total")
 
     def workshop_shift(self):
+
         if self.last_shift == WORKSHOP_SHIFT:
             print("\nYou can't do the same shift twice in a row, choose a different shift\n")
             return
@@ -266,7 +289,7 @@ class Player:
         input("Press enter to start\n")
 
         while completed_num_plates < num_to_complete:
-            self.countdown()
+            countdown()
 
             number_plate_letters = "".join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ', k=3))
             number_plate_numbers = "".join(random.choices('1234567890', k=3))
@@ -306,27 +329,38 @@ class Player:
         print("You successfully completed your shift and earnt 5 dollars!")
         print(f"You now have ${self.money} in total \n")
 
+
     def steal_food(self):
         print("You are trying to take someones food without getting caught")
-        print("To succesfully take someones food you must press the enter button within a timeframe between 8 - 10 seconds")
-        print("You must count in your head then press enter when you think the timer is between 8 and 10 seconds")
+        print("To succesfully take someones food you must press the enter button within a given time frame")
+        print("Don't press enter too early or too late to take the food.")
         print("Good luck! \n")
         input("Press enter to start\n")
 
-        self.countdown()
+        while True:
+            countdown()
+            time_frame_min = random.randrange(2, 10)
+            time_frame_max = time_frame_min + 2
 
-        start = time.time()
-        user_input = input("Press enter between 8 and 10 seconds. \n>")
-        end = time.time()
-        elapsed_time = round(end - start, 2)
+            start = time.time()
+            stop_timer = input(f"Press enter between {time_frame_min} and {time_frame_max} seconds. \n>")
+            if stop_timer != "":
+                print("Only press enter")
+                continue
+            end = time.time()
+            elapsed_time = round(end - start, 2)
 
-        print(elapsed_time)
-        if 8 <= elapsed_time <= 10:
-            print("Hola soy Dora")
-        else:
-            print("Yo trash brotato chip")
+            print(f"{elapsed_time} seconds")
+            if time_frame_min <= elapsed_time <= time_frame_max:
+                self.inventory.append("Food")
+                print("You succesfully stole food!")
+                print("+Food")
+                self.show_inventory()
 
-        print(start, end)
+                return
+            else:
+                print("You missed your opportunity")
+                print("Try again \n")
 
 
     def show_inventory(self):
@@ -335,15 +369,21 @@ class Player:
         else:
             print("Inventory empty \n")
 
-    def countdown(self):
-        print("Starting in ...")
-        print("3")
-        time.sleep(1)
-        print("2")
-        time.sleep(1)
-        print("1 \n")
-        time.sleep(1)
-            
+
+def countdown():
+    print("Starting in ...")
+    print("3")
+    time.sleep(1)
+    print("2")
+    time.sleep(1)
+    print("1 \n")
+    time.sleep(1)
+
+def indexed_loop(looped_list):
+    for index, value in enumerate(looped_list):
+        print(f"{index + 1}: {value.capitalize()}")
+
+
 class NPC:
     def __init__(self, name, dialogue, exchange):
         self.name = name
@@ -388,7 +428,7 @@ cell = Room(
     "cell",
     "You are in your Cell. \nIt's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n", #Description
     [CHECK, MOVE, TALK], #Actions
-    [], #Items
+    ["Spoon", "Fork"], #Items
     ["workshop", "bathroom", "cafeteria"], #Exits
     npcs=Derek_NPC
 )
@@ -396,7 +436,7 @@ cell = Room(
 cafeteria = Room(
     "cafeteria",
     "You are in the Cafeteria. \nIt's a loud place with", #Description
-    [CHECK, MOVE], #Actions
+    [CHECK, MOVE, STEAL_FOOD], #Actions
     [], #Items
     ["cell", "yard", "kitchen"] #Exits
 )
@@ -446,7 +486,7 @@ rooms = {
 
 
 #PLAYER CLASS OBJECT
-player = Player(rooms["workshop"], rooms)
+player = Player(rooms["cell"], rooms)
 
 #FUNCTIONS
 def show_map():
@@ -481,7 +521,6 @@ clear_screen()
 print(INSTRUCTIONS) #Give user game instructions
 print(STARTING_MAP)
 print(player.player_location.description) #Starting room description
-player.steal_food()
 
 while True:
     player.action()
