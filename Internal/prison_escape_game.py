@@ -61,7 +61,7 @@ class Player:
             WORKSHOP_SHIFT: self.workshop_shift,
         }
 
-        self.inventory = ["toothbrush", "knife"]
+        self.inventory = []
         self.money = 10
         self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
@@ -159,21 +159,22 @@ class Player:
                 if self.money >= requirement:
                     self.money -= requirement
                     self.inventory.append(reward)
-                    print(self.inventory)
-                    print(self.money)
                     print(dialogue["after_exchange"]) #Print dialogue for when you give npc required item
-                    print(f"+{reward.capitalize()} \n")
+                    print(f"-{requirement}")
+                    print(f"+{reward} \n")
+                    self.show_inventory()
                     return
                 
             elif requirement_type == "item": #Check if npc wants an item
                 if requirement in self.inventory:
                     self.inventory.remove(requirement)
                     self.inventory.append(reward)
-                    print(self.inventory)
                     print(dialogue["after_exchange"]) #Print dialogue for when you give npc required item
-                    print(f"+{reward.capitalize()} \n")
+                    print(f"-{requirement}")
+                    print(f"+{reward} ")
+                    self.show_inventory()
                     return
-                    
+
 
             print(dialogue["already_spoken"]) # Print dialogue for if user has already spoken to npc
         else:
@@ -266,13 +267,7 @@ class Player:
         input("Press enter to start\n")
 
         while completed_num_plates < num_to_complete:
-            print("Starting in ...")
-            print("3")
-            time.sleep(1)
-            print("2")
-            time.sleep(1)
-            print("1 \n")
-            time.sleep(1)
+            self.countdown()
 
             number_plate_letters = "".join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ', k=3))
             number_plate_numbers = "".join(random.choices('1234567890', k=3))
@@ -312,7 +307,35 @@ class Player:
         print("You successfully completed your shift and earnt 5 dollars!")
         print(f"You now have ${self.money} in total \n")
 
-            
+    def steal_food(self):
+        print("You are trying to take someones food without getting caught")
+        print("To succesfully take someones food you must press the enter button within a timeframe between 8 - 10 seconds")
+        print("You must count in your head then press enter when you think the timer is between 8 and 10 seconds")
+        print("Good luck! \n")
+
+        self.countdown()
+
+        start = time.time()
+
+        end = time.time()
+
+        print(start, end)
+
+
+    def show_inventory(self):
+        if self.inventory:
+            print(f"Inventory: {', '.join(self.inventory)} \n")
+        else:
+            print("Inventory empty \n")
+
+    def countdown(self):
+        print("Starting in ...")
+        print("3")
+        time.sleep(1)
+        print("2")
+        time.sleep(1)
+        print("1 \n")
+        time.sleep(1)
             
 class NPC:
     def __init__(self, name, dialogue, exchange):
@@ -326,11 +349,11 @@ class NPC:
 Derek_NPC = NPC(
     "Derek",
     {"intro": "Yo, Derek is me. I got a mission for you. If you get me 10 dollars i'll give you a screwdriver. Get money from doing a shift in the Kitchen or Workshop then get back to me. \n",
-     "already_spoken": "I already told you go get me money from a shift in the Kitchen and you can have the screwdriver. \n",
+     "already_spoken": "I already told you. Go get me money from a shift in the Kitchen or Workshop and you can have the screwdriver. \n",
      "after_exchange": "I appreciate it bro. Heres your screwdriver."},
     {"type": "money",
      "requirement": 10,
-     "reward": "screwdriver"}
+     "reward": "Screwdriver"}
 )
 
 Joel_NPC = NPC(
@@ -339,8 +362,8 @@ Joel_NPC = NPC(
      "already_spoken": "Get back to me when you have my toothbrush and i'll give you the scrap metal. \n",
      "after_exchange": "Thanks man! Here's the scrap metal."},
     {"type": "item",
-     "requirement": "toothbrush",
-     "reward": "scrap metal"}
+     "requirement": "Toothbrush",
+     "reward": "Scrap metal"}
 )
 
 Bob_NPC = NPC(
@@ -349,8 +372,8 @@ Bob_NPC = NPC(
      "already_spoken": "I'm begging you man please get me some food I'm starving! Then you can have the firework. It's perfect for a good distraction. \n",
      "after_exchange": "YAY, i've been starving for so long! Thanks so much, here's the firework!"},
     {"type": "item",
-     "requirement": "food",
-     "reward": "firework"}
+     "requirement": "Food",
+     "reward": "Firework"}
 )
 
 #ROOM CLASS OBJECTS
@@ -358,7 +381,7 @@ cell = Room(
     "cell",
     "You are in your Cell. \nIt's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n", #Description
     [CHECK, MOVE, TALK], #Actions
-    ["Sword", "Fork", "Knife"], #Items
+    [], #Items
     ["workshop", "bathroom", "cafeteria"], #Exits
     npcs=Derek_NPC
 )
@@ -391,7 +414,7 @@ bathroom = Room(
     "bathroom",
     "You are in the Bathroom. \n", #Description
     [CHECK, MOVE, TALK], #Actions
-    [], #Items
+    ["Toothbrush"], #Items
     ["cell", "workshop"], #Exits
     npcs=Bob_NPC
 )
@@ -451,7 +474,7 @@ clear_screen()
 print(INSTRUCTIONS) #Give user game instructions
 print(STARTING_MAP)
 print(player.player_location.description) #Starting room description
-print(player.inventory)
+player.steal_food()
 
 while True:
     player.action()
