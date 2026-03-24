@@ -74,21 +74,10 @@ class Player:
         while True:
             indexed_loop(self.player_location.actions)
 
-            try:
-                choice = int(input("\nChoose action: "))
+            chosen_action = self.pick_from_choices("\nChoose action: ", self.player_location.actions)
 
-                if 1 <= choice <= len(self.player_location.actions): #Check if user's choice is one of avaliable options
-                    indexed_choice = choice - 1
-                    action_name = self.player_location.actions[indexed_choice]
-                    action_function = self.action_functions[action_name]
-                    action_function()
-
-                else:
-                    print(f"Please choose valid number between 1 - {len(player.player_location.actions)} \n")
-
-            except ValueError:
-                print("Please input a valid number")
-                continue
+            action_function = self.action_functions[chosen_action]
+            action_function()
 
             break
 
@@ -116,19 +105,26 @@ class Player:
             pick_item_choice = input("Yes/No \n>").lower()
             if pick_item_choice == "yes":
                 indexed_loop(self.player_location.items)
-                choice = int(input("\nChoose item to pick up: "))
+                if len(self.player_location.items) > 1:
+                    print("or")
+                    print(f"{len(self.player_location.items) + 1}: Pick up all items")
+                    extra_choice = True
 
-                if 1 <= choice <= len(self.player_location.items):
-                    indexed_choice = choice - 1
-                    chosen_item = self.player_location.items[indexed_choice]
+                chosen_item = self.pick_from_choices("\nChoose item to pick up: ", self.player_location.items, extra_choice)
+                print(chosen_item)
+                if chosen_item:
+                    print("YAY")
+
+                else:
                     print(f"+{chosen_item}")
                     self.inventory.append(chosen_item)
                     self.player_location.items.remove(chosen_item)
                     self.show_inventory()
 
 
+
                 break
-            elif choice == "no":
+            elif pick_item_choice == "no":
                 print("NOO")
 
                 break
@@ -149,27 +145,14 @@ class Player:
             print("or")
             print(f"{len(self.player_location.exits) + 1}: Stay in {self.player_location.name} \n")
 
-            try:
-                choice = int(input("Choose a room to go to: "))
+            chosen_room = self.pick_from_choices("Choose a room to go to: ", self.player_location.exits)
+            if chosen_room:
+                print("You chose to stay")
+            else:
+                self.player_location = self.rooms[chosen_room] #Update player location
+                print(f"You chose {chosen_room}")  # Print chosen room
+            break
 
-                if 1 <= choice <= len(self.player_location.exits):
-                    index_choice = choice - 1 #Get the index of users choice
-
-                    chosen_room = self.player_location.exits[index_choice]
-                    print(f"You chose {chosen_room.capitalize()}") #Print chosen room
-
-                    self.player_location = self.rooms[chosen_room] #Update player location
-                    break
-
-                elif choice == len(self.player_location.exits) + 1:
-                    break
-
-                else:
-                    print(f"Choose option between 1 and {len(self.player_location.exits)}")
-
-            except ValueError:
-                print("Please input a valid number")
-                continue
 
         show_map()
         print() #Add space for readability
@@ -379,6 +362,24 @@ class Player:
         else:
             print("Inventory empty \n")
 
+    def pick_from_choices(self, prompt, options, no_extra_choice=True):
+        while True:
+            try:
+                choice = int(input(prompt))
+
+                if 1 <= choice <= len(options):
+                    index = choice - 1  # Get the index of users choice
+                    chosen_choice = options[index]
+                    return chosen_choice
+                elif (choice == len(options) + 1) and no_extra_choice == False:
+                    return True
+                else:
+                    print(f"Choose option between 1 - {len(options)}")
+
+            except ValueError:
+                print("Please input a valid number")
+                continue
+
 
 def countdown():
     print("Starting in ...")
@@ -392,6 +393,7 @@ def countdown():
 def indexed_loop(looped_list):
     for index, value in enumerate(looped_list):
         print(f"{index + 1}: {value.capitalize()}")
+
 
 
 class NPC:
