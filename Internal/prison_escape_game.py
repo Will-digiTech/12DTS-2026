@@ -75,10 +75,11 @@ class Player:
             indexed_loop(self.player_location.actions)
 
             try:
-                choice = int(input("Choose action: "))
+                choice = int(input("\nChoose action: "))
 
                 if 1 <= choice <= len(self.player_location.actions): #Check if user's choice is one of avaliable options
-                    action_name = self.player_location.actions[choice - 1]
+                    indexed_choice = choice - 1
+                    action_name = self.player_location.actions[indexed_choice]
                     action_function = self.action_functions[action_name]
                     action_function()
 
@@ -112,9 +113,19 @@ class Player:
     def pick_up_item(self):
         print("Would you like to pick an item up?")
         while True:
-            choice = input("Yes/No \n>").lower()
-            if choice == "yes":
+            pick_item_choice = input("Yes/No \n>").lower()
+            if pick_item_choice == "yes":
                 indexed_loop(self.player_location.items)
+                choice = int(input("\nChoose item to pick up: "))
+
+                if 1 <= choice <= len(self.player_location.items):
+                    indexed_choice = choice - 1
+                    chosen_item = self.player_location.items[indexed_choice]
+                    print(f"+{chosen_item}")
+                    self.inventory.append(chosen_item)
+                    self.player_location.items.remove(chosen_item)
+                    self.show_inventory()
+
 
                 break
             elif choice == "no":
@@ -124,7 +135,6 @@ class Player:
             else:
                 print("Enter Yes or No")
                 continue
-        print(self.player_location.items)
 
 
 
