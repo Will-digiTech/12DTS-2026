@@ -101,16 +101,20 @@ class Player:
 
     def pick_up_item(self):
         print("Would you like to pick an item up?")
+
         while True:
             pick_item_choice = input("Yes/No \n>").lower()
-            if pick_item_choice == "yes":
-                indexed_loop(self.player_location.items)
-                if len(self.player_location.items) > 1:
-                    print("or")
-                    print(f"{len(self.player_location.items) + 1}: Pick up all items")
-                    extra_choice = True
 
-                chosen_item = self.pick_from_choices("\nChoose item to pick up: ", self.player_location.items, extra_choice)
+            if pick_item_choice == "yes":
+
+                options = self.player_location.items.copy()
+
+                if len(options) > 1:
+                    options.append("Pick up all items")
+
+                indexed_loop(self.player_location.items)
+
+                chosen_item = self.pick_from_choices("\nChoose item to pick up: ", self.player_location.items)
                 print(chosen_item)
                 if chosen_item:
                     print("YAY")
@@ -135,24 +139,21 @@ class Player:
 
 
     def move_room(self):
-        print() #Add space for readability
+        print("----Prison Map----")
+        show_map()
 
-        while True:
-            print("----Prison Map----")
-            show_map()
+        options = self.player_location.exits + ["Stay in current room"]
 
-            indexed_loop(self.player_location.exits)
-            print("or")
-            print(f"{len(self.player_location.exits) + 1}: Stay in {self.player_location.name} \n")
+        indexed_loop(options)
 
-            chosen_room = self.pick_from_choices("Choose a room to go to: ", self.player_location.exits)
-            if chosen_room:
-                print("You chose to stay")
-            else:
-                self.player_location = self.rooms[chosen_room] #Update player location
-                print(f"You chose {chosen_room}")  # Print chosen room
-            break
+        chosen_room = self.pick_from_choices("Choose a room to go to: ", options)
 
+        if chosen_room == "Stay in current room":
+            print("You chose to stay")
+        else:
+            self.player_location = self.rooms[chosen_room] #Update player location
+            print(f"You chose {chosen_room}")  # Print chosen room
+        
 
         show_map()
         print() #Add space for readability
@@ -362,23 +363,19 @@ class Player:
         else:
             print("Inventory empty \n")
 
-    def pick_from_choices(self, prompt, options, no_extra_choice=True):
+    def pick_from_choices(self, prompt, options):
         while True:
             try:
                 choice = int(input(prompt))
 
                 if 1 <= choice <= len(options):
-                    index = choice - 1  # Get the index of users choice
-                    chosen_choice = options[index]
-                    return chosen_choice
-                elif (choice == len(options) + 1) and no_extra_choice == False:
-                    return True
+                    return options[choice - 1]
+                
                 else:
                     print(f"Choose option between 1 - {len(options)}")
 
             except ValueError:
                 print("Please input a valid number")
-                continue
 
 
 def countdown():
