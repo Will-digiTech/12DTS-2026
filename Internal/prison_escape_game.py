@@ -35,6 +35,7 @@ KITCHEN_SHIFT = "Start Kitchen shift"
 WORKSHOP_SHIFT  = "Start Workshop shift"
 STEAL_FOOD = "Steal food"
 HIDE_ITEM = "Hide item under bed"
+GET_ITEM_BED = "Get stored items from under bed"
 
 #CLASSES
 class Room:
@@ -62,12 +63,13 @@ class Player:
             KITCHEN_SHIFT: self.kitchen_shift,
             WORKSHOP_SHIFT: self.workshop_shift,
             STEAL_FOOD: self.steal_food,
-            HIDE_ITEM: self.hide_item
+            HIDE_ITEM: self.hide_item,
+            GET_ITEM_BED: self.get_item_from_bed
         }
 
         self.inventory = []
         self.max_inventory = 3
-        self.bed_inventory = []
+        self.bed_inventory = ["Hat", "Sunglasses"]
         self.money = 10
         self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
@@ -99,7 +101,8 @@ class Player:
 
             self.pick_up_item()
         else:
-            print("\nYou don't find anything\n")
+            display_a_message("You don't find anything", 3)
+            # print("\nYou don't find anything\n")
 
         print() #Add space for readability
 
@@ -129,6 +132,9 @@ class Player:
                             print() #Add space for readibility
                             print(e)
                             print() #Add space for readibility
+
+                    self.show_inventory(self.inventory, "Inventory", 6)
+                    break
                     
                 else:
                     try:
@@ -136,8 +142,8 @@ class Player:
                     except ValueError as e:
                         print(e)
 
-
-                self.show_inventory(self.inventory, "Inventory")
+                
+                self.show_inventory(self.inventory, "Inventory", 3)
                 break
             elif pick_item_choice == "no":
                 break
@@ -229,7 +235,7 @@ class Player:
                     self.bed_inventory.append(item)
                     self.inventory.remove(item)
                     print(f"+{item}")
-                self.show_inventory(self.bed_inventory, "Bed inventory")
+                self.show_inventory(self.bed_inventory, "Bed inventory", 4)
 
             else:
                 self.bed_inventory.append(choice)
@@ -239,6 +245,14 @@ class Player:
 
         else:
             print("You don't have anything to hide")
+            return
+
+    def get_item_from_bed(self):
+        clear_screen()
+        if self.bed_inventory:
+            indexed_loop(self.bed_inventory)
+        else:
+            display_a_message("There are no stored items under your bed", 3)
             return
 
 
@@ -401,11 +415,14 @@ class Player:
                 print("Try again \n")
 
 
-    def show_inventory(self, inventory, name):
+    def show_inventory(self, inventory, name, seconds):
         if inventory:
             print(f"{name}: {', '.join(inventory)} \n")
         else:
             print(f"{name} empty \n")
+
+        time.sleep(seconds)
+        clear_screen()
 
     def pick_from_choices(self, prompt, options):
         while True:
@@ -435,6 +452,11 @@ def indexed_loop(looped_list):
     for index, value in enumerate(looped_list):
         print(f"{index + 1}: {value.capitalize()}")
 
+def display_a_message(message, seconds):
+    clear_screen()
+    print(message)
+    time.sleep(seconds)
+    clear_screen()
 
 
 class NPC:
@@ -480,7 +502,7 @@ Bob_NPC = NPC(
 cell = Room(
     "cell",
     "You are in your Cell. \nIt's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n", #Description
-    [CHECK, MOVE, TALK, HIDE_ITEM], #Actions
+    [CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED], #Actions
     ["Spoon", "Fork", "Knife", "Scissors"], #Items
     ["workshop", "bathroom", "cafeteria"], #Exits
     npcs=Derek_NPC
