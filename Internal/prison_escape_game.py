@@ -34,6 +34,7 @@ TALK = "Talk to prisoner"
 KITCHEN_SHIFT = "Start Kitchen shift"
 WORKSHOP_SHIFT  = "Start Workshop shift"
 STEAL_FOOD = "Steal food"
+HIDE_ITEM = "Hide item under bed"
 
 #CLASSES
 class Room:
@@ -60,10 +61,13 @@ class Player:
             TALK: self.talk_to_prisoner,
             KITCHEN_SHIFT: self.kitchen_shift,
             WORKSHOP_SHIFT: self.workshop_shift,
-            STEAL_FOOD: self.steal_food
+            STEAL_FOOD: self.steal_food,
+            HIDE_ITEM: self.hide_item
         }
 
         self.inventory = []
+        self.max_inventory = 3
+        self.bed_inventory = []
         self.money = 10
         self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
@@ -83,6 +87,7 @@ class Player:
 
 
     def look_around(self):
+        clear_screen()
         if len(self.player_location.items) > 1:
             joined_items = ", ".join(self.player_location.items[:-1]) + ' and ' + self.player_location.items[-1] #Displays items found in Enlgish
             print(f"\nYou see a {joined_items}\n")
@@ -117,18 +122,22 @@ class Player:
                 choice = self.pick_from_choices("\nChoose item to pick up: ", options)
                 
                 if choice == "Pick up all items":
-                    for item in self.player_location.items:
-                        self.inventory.append(item)
-                        print(f"+{item}")
-                    self.player_location.items.clear()
+                    for item in self.player_location.items[:]:
+                        try:
+                            self.add_to_inventory(item)
+                        except ValueError as e:
+                            print() #Add space for readibility
+                            print(e)
+                            print() #Add space for readibility
                     
                 else:
-                    self.inventory.append(choice)
-                    self.player_location.items.remove(choice)
-                    print(f"+{choice}")
+                    try:
+                        self.add_to_inventory(choice)
+                    except ValueError as e:
+                        print(e)
 
 
-                self.show_inventory()
+                self.show_inventory(self.inventory, "Inventory")
                 break
             elif pick_item_choice == "no":
                 break
@@ -136,9 +145,17 @@ class Player:
                 print("Enter Yes or No")
                 continue
 
+    def add_to_inventory(self, item):
+        if len(self.inventory) >= self.max_inventory:
+            raise ValueError(f"Inventory is full (max {self.max_inventory} items). Clear inventory by using items or hiding it under your bed")
+        
+        self.inventory.append(item)
+        self.player_location.items.remove(item)
+        print(f"+{item}")
 
 
     def move_room(self):
+        clear_screen()
         print("----Prison Map----")
         show_map()
 
@@ -155,12 +172,11 @@ class Player:
             print(f"You chose {chosen_room}")  # Print chosen room
         
 
-        show_map()
-        print() #Add space for readability
-        print(self.player_location.description) #Print new location to terminal
+        clear_screen()
 
 
     def talk_to_prisoner(self):
+        clear_screen()
         dialogue = self.player_location.npcs.dialogue
         already_spoken_to = self.player_location.npcs.already_spoken_to
         requirement_type = self.player_location.npcs.exchange["type"]
@@ -168,7 +184,6 @@ class Player:
         reward = self.player_location.npcs.exchange["reward"]
 
 
-        print() #Add space for readability
         if already_spoken_to:
             #Check if user has required items NPC is requesting.
             if requirement_type == "money": #Check if npc wants money
@@ -178,7 +193,7 @@ class Player:
                     print(dialogue["after_exchange"]) #Print dialogue for when you give npc required item
                     print(f"-${requirement}")
                     print(f"+{reward} \n")
-                    self.show_inventory()
+                    self.show_inventory(self.inventory, "Inventory")
                     return
                 
             elif requirement_type == "item": #Check if npc wants an item
@@ -188,7 +203,7 @@ class Player:
                     print(dialogue["after_exchange"]) #Print dialogue for when you give npc required item
                     print(f"-{requirement}")
                     print(f"+{reward} ")
-                    self.show_inventory()
+                    self.show_inventory(self.inventory, "Inventory")
                     return
 
 
@@ -196,6 +211,35 @@ class Player:
         else:
             print(dialogue["intro"]) # Print dialogue for npc opening script
             self.player_location.npcs.already_spoken_to = True
+
+
+    def hide_item(self):
+        if self.inventory:
+            options = self.inventory.copy()
+
+            if len(options) > 1:
+                options.append("Hide all items")
+
+            indexed_loop(options)
+
+            choice = self.pick_from_choices("\nChoose item to hide under the bed: ", options)
+
+            if choice == "Hide all items":
+                for item in self.inventory[:]:
+                    self.bed_inventory.append(item)
+                    self.inventory.remove(item)
+                    print(f"+{item}")
+                self.show_inventory(self.bed_inventory, "Bed inventory")
+
+            else:
+                self.bed_inventory.append(choice)
+                self.inventory.remove(choice)
+                print(f"+{choice}")
+                self.show_inventory(self.bed_inventory, "Bed inventory")
+
+        else:
+            print("You don't have anything to hide")
+            return
 
 
     def kitchen_shift(self):
@@ -349,7 +393,7 @@ class Player:
                 self.inventory.append("Food")
                 print("You succesfully stole food!")
                 print("+Food")
-                self.show_inventory()
+                self.show_inventory(self.inventory, "Inventory")
 
                 return
             else:
@@ -357,11 +401,11 @@ class Player:
                 print("Try again \n")
 
 
-    def show_inventory(self):
-        if self.inventory:
-            print(f"Inventory: {', '.join(self.inventory)} \n")
+    def show_inventory(self, inventory, name):
+        if inventory:
+            print(f"{name}: {', '.join(inventory)} \n")
         else:
-            print("Inventory empty \n")
+            print(f"{name} empty \n")
 
     def pick_from_choices(self, prompt, options):
         while True:
@@ -436,8 +480,8 @@ Bob_NPC = NPC(
 cell = Room(
     "cell",
     "You are in your Cell. \nIt's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n", #Description
-    [CHECK, MOVE, TALK], #Actions
-    ["Spoon", "Fork"], #Items
+    [CHECK, MOVE, TALK, HIDE_ITEM], #Actions
+    ["Spoon", "Fork", "Knife", "Scissors"], #Items
     ["workshop", "bathroom", "cafeteria"], #Exits
     npcs=Derek_NPC
 )
@@ -528,10 +572,13 @@ def clear_screen():
 #----Game Loop----
 clear_screen()
 print(INSTRUCTIONS) #Give user game instructions
+print("----Prison Map----")
 print(STARTING_MAP)
-print(player.player_location.description) #Starting room description
+input("Press enter to start game \n")
+clear_screen()
 
 while True:
+    print(player.player_location.description) #Room description
     player.action()
 
     # player.look_around()
