@@ -112,25 +112,25 @@ class Player:
                 if len(options) > 1:
                     options.append("Pick up all items")
 
-                indexed_loop(self.player_location.items)
+                indexed_loop(options)
 
-                chosen_item = self.pick_from_choices("\nChoose item to pick up: ", self.player_location.items)
-                print(chosen_item)
-                if chosen_item:
-                    print("YAY")
-
+                choice = self.pick_from_choices("\nChoose item to pick up: ", options)
+                
+                if choice == "Pick up all items":
+                    for item in self.player_location.items:
+                        self.inventory.append(item)
+                        print(f"+{item}")
+                    self.player_location.items.clear()
+                    
                 else:
-                    print(f"+{chosen_item}")
-                    self.inventory.append(chosen_item)
-                    self.player_location.items.remove(chosen_item)
-                    self.show_inventory()
+                    self.inventory.append(choice)
+                    self.player_location.items.remove(choice)
+                    print(f"+{choice}")
 
 
-
+                self.show_inventory()
                 break
             elif pick_item_choice == "no":
-                print("NOO")
-
                 break
             else:
                 print("Enter Yes or No")
