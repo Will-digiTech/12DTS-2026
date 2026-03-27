@@ -37,6 +37,10 @@ STEAL_FOOD = "Steal food"
 HIDE_ITEM = "Hide item under bed"
 GET_ITEM_BED = "Get stored items from under bed"
 
+MESSAGE_LENGTHS = 3
+LONGER_MESSAGE_LENGTHS = 5
+
+
 #CLASSES
 class Room:
     def __init__(self, name, description, actions, items, exits, npcs=None):
@@ -69,7 +73,7 @@ class Player:
 
         self.inventory = []
         self.max_inventory = 3
-        self.bed_inventory = ["Hat", "Sunglasses"]
+        self.bed_inventory = []
         self.money = 10
         self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
@@ -127,23 +131,21 @@ class Player:
                 if choice == "Pick up all items":
                     for item in self.player_location.items[:]:
                         try:
-                            self.add_to_inventory(item)
+                            self.add_to_inventory(item, self.player_location.items)
                         except ValueError as e:
-                            print() #Add space for readibility
-                            print(e)
-                            print() #Add space for readibility
+                            print(f"\n{e}\n")
 
-                    self.show_inventory(self.inventory, "Inventory", 6)
+                    self.show_inventory(self.inventory, "Inventory", LONGER_MESSAGE_LENGTHS)
                     break
                     
                 else:
                     try:
-                        self.add_to_inventory(choice)
+                        self.add_to_inventory(choice, self.player_location.items)
                     except ValueError as e:
                         print(e)
 
                 
-                self.show_inventory(self.inventory, "Inventory", 3)
+                self.show_inventory(self.inventory, "Inventory", LONGER_MESSAGE_LENGTHS)
                 break
             elif pick_item_choice == "no":
                 break
@@ -151,12 +153,12 @@ class Player:
                 print("Enter Yes or No")
                 continue
 
-    def add_to_inventory(self, item):
+    def add_to_inventory(self, item, remove_key):
         if len(self.inventory) >= self.max_inventory:
             raise ValueError(f"Inventory is full (max {self.max_inventory} items). Clear inventory by using items or hiding it under your bed")
         
         self.inventory.append(item)
-        self.player_location.items.remove(item)
+        remove_key.remove(item)
         print(f"+{item}")
 
 
@@ -199,7 +201,7 @@ class Player:
                     print(dialogue["after_exchange"]) #Print dialogue for when you give npc required item
                     print(f"-${requirement}")
                     print(f"+{reward} \n")
-                    self.show_inventory(self.inventory, "Inventory")
+                    self.show_inventory(self.inventory, "Inventory", MESSAGE_LENGTHS)
                     return
                 
             elif requirement_type == "item": #Check if npc wants an item
@@ -209,7 +211,7 @@ class Player:
                     print(dialogue["after_exchange"]) #Print dialogue for when you give npc required item
                     print(f"-{requirement}")
                     print(f"+{reward} ")
-                    self.show_inventory(self.inventory, "Inventory")
+                    self.show_inventory(self.inventory, "Inventory", MESSAGE_LENGTHS)
                     return
 
 
@@ -235,25 +237,54 @@ class Player:
                     self.bed_inventory.append(item)
                     self.inventory.remove(item)
                     print(f"+{item}")
-                self.show_inventory(self.bed_inventory, "Bed inventory", 4)
+                self.show_inventory(self.bed_inventory, "Bed inventory", MESSAGE_LENGTHS)
 
             else:
                 self.bed_inventory.append(choice)
                 self.inventory.remove(choice)
                 print(f"+{choice}")
-                self.show_inventory(self.bed_inventory, "Bed inventory")
+                self.show_inventory(self.bed_inventory, "Bed inventory", MESSAGE_LENGTHS)
 
         else:
             print("You don't have anything to hide")
             return
 
     def get_item_from_bed(self):
-        clear_screen()
-        if self.bed_inventory:
-            indexed_loop(self.bed_inventory)
-        else:
-            display_a_message("There are no stored items under your bed", 3)
-            return
+        while True:
+            clear_screen()
+            if self.bed_inventory:
+
+                options = self.bed_inventory.copy()
+
+                if len(options) > 1:
+                    options.append("Get all items from bed")
+
+                indexed_loop(options)
+
+                choice = self.pick_from_choices("\nChoose item to take: ", options)
+
+                if choice == "Get all items from bed":
+                    for item in self.bed_inventory[:]:
+                        try:
+                            self.add_to_inventory(item, self.bed_inventory)
+                        except ValueError as e:
+                            print(f"\n{e}\n")
+
+                    self.show_inventory(self.inventory, "Inventory", LONGER_MESSAGE_LENGTHS)
+                    break
+
+                else:
+                    try:
+                        self.add_to_inventory(choice, self.bed_inventory)
+                    except ValueError as e:
+                        print(f"\n{e}\n")
+
+                self.show_inventory(self.inventory, "Inventory", LONGER_MESSAGE_LENGTHS)
+                break
+
+            else:
+                display_a_message("There are no stored items under your bed", 3)
+                break
 
 
     def kitchen_shift(self):
@@ -407,7 +438,7 @@ class Player:
                 self.inventory.append("Food")
                 print("You succesfully stole food!")
                 print("+Food")
-                self.show_inventory(self.inventory, "Inventory")
+                self.show_inventory(self.inventory, "Inventory", MESSAGE_LENGTHS)
 
                 return
             else:
