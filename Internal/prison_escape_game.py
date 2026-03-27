@@ -38,6 +38,7 @@ HIDE_ITEM = "Hide item under bed"
 GET_ITEM_BED = "Get stored items from under bed"
 TAKE_GUARD_UNIFROM = "Attempt to beat up guard"
 CLIMB_WALL = "Attempt to climb wall"
+VENT_ESCAPE = "Climb through vent"
 
 MESSAGE_LENGTHS = 3
 LONGER_MESSAGE_LENGTHS = 5
@@ -72,29 +73,21 @@ class Player:
             HIDE_ITEM: self.hide_item,
             GET_ITEM_BED: self.get_item_from_bed,
             TAKE_GUARD_UNIFROM: self.knock_out_guard,
-            CLIMB_WALL: self.climb_wall
+            CLIMB_WALL: self.climb_wall,
+            VENT_ESCAPE: self.vent_escape
         }
 
-        self.inventory = ["Makeshift weapon"]
+        self.inventory = ["Makeshift weapon", "Screwdriver"]
         self.max_inventory = 3
         self.bed_inventory = []
         self.money = 10
         self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
-        self.disguised = False
-        self.actions_remaining = 5 #Count how many moves player has before getting caught in guard disguise
+        self.guard_id = 24154
 
 
     def action(self):
         while True:
-            if self.disguised:
-                self.actions_remaining -= 1
-                print(f"Actions remaining: {self.actions_remaining}")
-
-                if self.num_of_actions_remianing <= 0:
-                    display_a_message("You took too long, the guards noticed your not one of them.", 4)
-                    game_over_lost()
-
             indexed_loop(self.player_location.actions)
 
             chosen_action = self.pick_from_choices("\nChoose action: ", self.player_location.actions)
@@ -425,43 +418,6 @@ class Player:
         print("You successfully completed your shift and earnt 5 dollars!")
         print(f"You now have ${self.money} in total \n")
 
-
-    def knock_out_guard(self):
-        #Chance of escaping without a makeshift weapon (1% success rate)
-        if "Makeshift weapon" not in self.inventory:
-            if random.random() > 0.01:
-                display_a_message("You tried to sneak attack the guard without a makeshift weapon, he beats you up.", 5)
-                game_over_lost()
-            else:
-                display_a_message("You succesfully beat the guard with no makeshift weapon.", 4)
-
-        else:
-            display_a_message(guard_disguise["Attack guard text"], 5)
-
-        #Chance of taking guards clothes wihtout getting caught (70% success rate)
-        if random.random() > 0.3:
-            display_a_message(guard_disguise["Take uniform"]["success"], 5)
-        else:
-            display_a_message(guard_disguise["Take uniform"]["fail"], 5)
-            game_over_lost()
-
-        display_a_message(guard_disguise["In uniform text"], 5)
-
-        
-
-
-    def climb_wall(self):
-        if "Grapping hook" not in self.inventory:
-            display_a_message(wall_climb_escape["No grappling hook text"], 8)
-        elif "Firework" not in self.inventory:
-            display_a_message(wall_climb_escape["No firework text"], 8)
-        else:
-            clear_screen()
-            print(wall_climb_escape["Win text"])
-            game_over_won(3)
-            quit()
-
-
     def steal_food(self):
         print("You are trying to take someones food without getting caught")
         print("To succesfully take someones food you must press the enter button within a given time frame")
@@ -493,6 +449,74 @@ class Player:
             else:
                 print("You missed your opportunity")
                 print("Try again \n")
+
+
+    def vent_escape(self):
+        print(self.inventory) #Debugging line to show inventory before vent escape, can delete later
+        if "Screwdriver" in self.inventory:
+            display_a_message(vent_escape["Correct item"]["True"], 4)
+        else:
+            display_a_message(vent_escape["Correct item"]["False"], 4)
+            return
+
+
+        if self.vent_mini_game():
+            display_a_message(vent_escape["Mini game result"]["True"], 6)
+        else:
+            display_a_message(vent_escape["Mini game result"]["False"], 6)
+            game_over_lost()
+
+
+    def vent_mini_game(self):
+        return True if random.random() > 0.5 else False #50% chance of winning mini game, can change later if I want to make it easier or harder
+
+
+    def knock_out_guard(self):
+        #Chance of escaping without a makeshift weapon (1% success rate)
+        if "Makeshift weapon" not in self.inventory:
+            if random.random() > 0.01:
+                display_a_message("You tried to sneak attack the guard without a makeshift weapon, he beats you up.", 5)
+                game_over_lost()
+            else:
+                display_a_message("You succesfully beat the guard with no makeshift weapon.", 4)
+
+        else:
+            display_a_message(guard_disguise["Attack guard text"], 5)
+
+        #Chance of taking guards clothes wihtout getting caught (70% success rate)
+        if random.random() > 0.3:
+            display_a_message(guard_disguise["Take uniform"]["success"], 5)
+        else:
+            display_a_message(guard_disguise["Take uniform"]["fail"], 5)
+            game_over_lost()
+
+        print(guard_disguise["In uniform text"].format(guard_id=player.guard_id))
+        input("Press enter to continue")
+        self.id_check()
+        
+    def id_check(self):
+        clear_screen()
+        print(guard_disguise["Guard id check"])
+        user_input = int(input("\nEnter guard ID number : "))
+
+        if user_input == self.guard_id:
+            print(guard_disguise["Correct Id"])
+            return game_over_won(2)
+        else:
+            print(guard_disguise["Incorrect Id"])
+            return game_over_lost()
+
+
+    def climb_wall(self):
+        if "Grapping hook" not in self.inventory:
+            display_a_message(wall_climb_escape["No grappling hook text"], 8)
+        elif "Firework" not in self.inventory:
+            display_a_message(wall_climb_escape["No firework text"], 8)
+        else:
+            clear_screen()
+            print(wall_climb_escape["Win text"])
+            game_over_won(3)
+
 
 
     def show_inventory(self, inventory, name, seconds):
@@ -545,6 +569,7 @@ def game_over_lost():
 def game_over_won(ending):
     print("Congratulations! You successfully escaped the prison.")
     print(f"Ending {ending}/3")
+    quit()
 
 class NPC:
     def __init__(self, name, dialogue, exchange):
@@ -589,7 +614,7 @@ Bob_NPC = NPC(
 cell = Room(
     "cell",
     "You are in your Cell. \nIt's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n", #Description
-    [CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED, TAKE_GUARD_UNIFROM], #Actions
+    [CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED, VENT_ESCAPE], #Actions
     ["Spoon", "Fork", "Knife", "Scissors"], #Items
     ["workshop", "bathroom", "cafeteria"], #Exits
     npcs=Derek_NPC
@@ -614,7 +639,7 @@ yard = Room(
 kitchen = Room(
     "kitchen",
     "You are in the Kitchen. \n", #Description
-    [CHECK, MOVE, KITCHEN_SHIFT], #Actions
+    [CHECK, MOVE, KITCHEN_SHIFT, TAKE_GUARD_UNIFROM], #Actions
     [], #Items
     ["cafeteria", "yard"] #Exits
 )
@@ -652,15 +677,25 @@ player = Player(rooms["cell"], rooms)
 
 
 #Escape prison texts
+vent_escape = {
+    "Correct item": {"True": "You use your screwdriver to open the vent and climb through.", 
+                    "False": "You need a screwdriver to open the vent."},
+    "Mini game result": {"True": "You successfully make your way to the guards office and jump in.", 
+                         "False": "You get lost in the vents. Eventually, the guards notice an open vent and find you."}
+}
+
 guard_disguise = {
     "Attack guard text": "You use your makeshift weapon to incapacitate the guard.",
     "Take uniform": {
-        "success": "You successfully take the guards uniform without anyone noticing.",
+        "success": "You successfully take the guards uniform without anyone catching you.",
         "fail": "You try to take the guards uniform but get caught."
     },
-    "In uniform text": f"You are now in guard unform. You have {player.actions_remaining} actions before you get caught"
-}
+    "In uniform text": "You have the guards keycard and his ID number is {guard_id}. All you have to do is walk out the front door.",
+    "Guard id check": "As you are walking towards the exit you see another guard. He says, 'I don't think I've seen you around before. What's your ID number?'",
+    "Correct Id": "'Perfect, have a good one.', he says. You arrive at the front door and swipe your keycard.",
+    "Incorrect Id": "The guard looks confused and says, 'No guard has that ID, who are you?'. Before you can think of an excuse he is handcuffing you and taking you away."
 
+}
 
 wall_climb_escape = {
     "Win text": "You go over to the East side of the prison and carefully set up the firework behind a bush. You light the firework and swiftly walk away. The firework goes off, exploding above the prison. You set up the firework a little too close to the bush and the bush catches on fire. As everyone is focused on the commotion of the fire, you make your way over to the West side. You grab your grappling hook and climb the wall. ",
