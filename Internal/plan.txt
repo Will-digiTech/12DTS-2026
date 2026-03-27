@@ -16,6 +16,7 @@ Items you can only get from helping prisoners:
         
 Items you can make:
     -Makeshift Weapon: Made by combining toothbrush and piece of metal in the workshop.
+    -Makeshift Grapping hook: Made with rope and metal
     -Lockpick: Can be made by combining a piece of metal and a screwdriver.
 
 

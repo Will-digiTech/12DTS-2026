@@ -36,6 +36,8 @@ WORKSHOP_SHIFT  = "Start Workshop shift"
 STEAL_FOOD = "Steal food"
 HIDE_ITEM = "Hide item under bed"
 GET_ITEM_BED = "Get stored items from under bed"
+TAKE_GUARD_UNIFROM = "Attempt to beat up guard"
+CLIMB_WALL = "Attempt to climb wall"
 
 MESSAGE_LENGTHS = 3
 LONGER_MESSAGE_LENGTHS = 5
@@ -68,20 +70,31 @@ class Player:
             WORKSHOP_SHIFT: self.workshop_shift,
             STEAL_FOOD: self.steal_food,
             HIDE_ITEM: self.hide_item,
-            GET_ITEM_BED: self.get_item_from_bed
+            GET_ITEM_BED: self.get_item_from_bed,
+            TAKE_GUARD_UNIFROM: self.knock_out_guard,
+            CLIMB_WALL: self.climb_wall
         }
 
-        self.inventory = []
+        self.inventory = ["Makeshift weapon"]
         self.max_inventory = 3
         self.bed_inventory = []
         self.money = 10
         self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
-        self.already_spoken_derek = False
+        self.disguised = False
+        self.actions_remaining = 5 #Count how many moves player has before getting caught in guard disguise
 
 
     def action(self):
         while True:
+            if self.disguised:
+                self.actions_remaining -= 1
+                print(f"Actions remaining: {self.actions_remaining}")
+
+                if self.num_of_actions_remianing <= 0:
+                    display_a_message("You took too long, the guards noticed your not one of them.", 4)
+                    game_over_lost()
+
             indexed_loop(self.player_location.actions)
 
             chosen_action = self.pick_from_choices("\nChoose action: ", self.player_location.actions)
@@ -413,6 +426,42 @@ class Player:
         print(f"You now have ${self.money} in total \n")
 
 
+    def knock_out_guard(self):
+        #Chance of escaping without a makeshift weapon (1% success rate)
+        if "Makeshift weapon" not in self.inventory:
+            if random.random() > 0.01:
+                display_a_message("You tried to sneak attack the guard without a makeshift weapon, he beats you up.", 5)
+                game_over_lost()
+            else:
+                display_a_message("You succesfully beat the guard with no makeshift weapon.", 4)
+
+        else:
+            display_a_message(guard_disguise["Attack guard text"], 5)
+
+        #Chance of taking guards clothes wihtout getting caught (70% success rate)
+        if random.random() > 0.3:
+            display_a_message(guard_disguise["Take uniform"]["success"], 5)
+        else:
+            display_a_message(guard_disguise["Take uniform"]["fail"], 5)
+            game_over_lost()
+
+        display_a_message(guard_disguise["In uniform text"], 5)
+
+        
+
+
+    def climb_wall(self):
+        if "Grapping hook" not in self.inventory:
+            display_a_message(wall_climb_escape["No grappling hook text"], 8)
+        elif "Firework" not in self.inventory:
+            display_a_message(wall_climb_escape["No firework text"], 8)
+        else:
+            clear_screen()
+            print(wall_climb_escape["Win text"])
+            game_over_won(3)
+            quit()
+
+
     def steal_food(self):
         print("You are trying to take someones food without getting caught")
         print("To succesfully take someones food you must press the enter button within a given time frame")
@@ -489,6 +538,13 @@ def display_a_message(message, seconds):
     time.sleep(seconds)
     clear_screen()
 
+def game_over_lost():
+    print("Game over!")
+    quit()
+
+def game_over_won(ending):
+    print("Congratulations! You successfully escaped the prison.")
+    print(f"Ending {ending}/3")
 
 class NPC:
     def __init__(self, name, dialogue, exchange):
@@ -533,7 +589,7 @@ Bob_NPC = NPC(
 cell = Room(
     "cell",
     "You are in your Cell. \nIt's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n", #Description
-    [CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED], #Actions
+    [CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED, TAKE_GUARD_UNIFROM], #Actions
     ["Spoon", "Fork", "Knife", "Scissors"], #Items
     ["workshop", "bathroom", "cafeteria"], #Exits
     npcs=Derek_NPC
@@ -550,7 +606,7 @@ cafeteria = Room(
 yard = Room(
     "yard",
     "You are in the Yard. \n", #Description
-    [CHECK, MOVE], #Actions
+    [CHECK, MOVE, CLIMB_WALL], #Actions
     [], #Items
     ["cafeteria", "kitchen"] #Exits
 )
@@ -593,6 +649,28 @@ rooms = {
 
 #PLAYER CLASS OBJECT
 player = Player(rooms["cell"], rooms)
+
+
+#Escape prison texts
+guard_disguise = {
+    "Attack guard text": "You use your makeshift weapon to incapacitate the guard.",
+    "Take uniform": {
+        "success": "You successfully take the guards uniform without anyone noticing.",
+        "fail": "You try to take the guards uniform but get caught."
+    },
+    "In uniform text": f"You are now in guard unform. You have {player.actions_remaining} actions before you get caught"
+}
+
+
+wall_climb_escape = {
+    "Win text": "You go over to the East side of the prison and carefully set up the firework behind a bush. You light the firework and swiftly walk away. The firework goes off, exploding above the prison. You set up the firework a little too close to the bush and the bush catches on fire. As everyone is focused on the commotion of the fire, you make your way over to the West side. You grab your grappling hook and climb the wall. ",
+    "No grappling hook text": "You need a grapping hook to climb the walls, this can be crafted by using scrap metal and rope.",
+    "No firework text": "There are too many guards around, you need a distraction. Find a firework to create a distraction."
+}
+
+
+
+
 
 #FUNCTIONS
 def show_map():
