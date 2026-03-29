@@ -86,7 +86,7 @@ class Player:
         self.inventory = []
         self.max_inventory = 3
         self.bed_inventory = []
-        self.money = 0
+        self.money = 10
         self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
         self.length_of_vent_sequence = 5 #Length of direction sequence in vent mini game, can be changed to make mini game easier or harder
@@ -110,17 +110,16 @@ class Player:
         clear_screen()
         if len(self.player_location.items) > 1:
             joined_items = ", ".join(self.player_location.items[:-1]) + ' and ' + self.player_location.items[-1] #Displays items found in Enlgish
-            print(f"\nYou see a {joined_items}\n")
+            type_writer(f"\nYou see a {joined_items}\n")
 
             self.pick_up_item()
 
         elif self.player_location.items:
-            print(f"\nYou see a {self.player_location.items[0]}\n")
+            type_writer(f"\nYou see a {self.player_location.items[0]}\n", ask_for_input=False)
 
             self.pick_up_item()
         else:
-            display_a_message("You don't find anything", 3)
-            # print("\nYou don't find anything\n")
+            type_writer("You don't find anything")
 
         print() #Add space for readability
 
@@ -130,12 +129,18 @@ class Player:
 
         while True:
             pick_item_choice = input("Yes/No \n>").lower()
+            print() #Add space for readibility
 
             if pick_item_choice == "yes":
 
                 options = self.player_location.items.copy()
 
-                if len(options) > 1:
+                if len(options) == 1:
+                    item = options[0]
+                    self.add_to_inventory(item, self.player_location.items)
+                    self.show_inventory(self.inventory, "Inventory")
+                    break
+                else:
                     options.append("Pick up all items")
 
                 indexed_loop(options)
@@ -149,7 +154,7 @@ class Player:
                         except ValueError as e:
                             print(f"\n{e}\n")
 
-                    self.show_inventory(self.inventory, "Inventory", LONGER_MESSAGE_LENGTHS)
+                    self.show_inventory(self.inventory, "Inventory")
                     break
                     
                 else:
@@ -159,7 +164,7 @@ class Player:
                         print(e)
 
                 
-                self.show_inventory(self.inventory, "Inventory", LONGER_MESSAGE_LENGTHS)
+                self.show_inventory(self.inventory, "Inventory")
                 break
             elif pick_item_choice == "no":
                 break
@@ -167,13 +172,16 @@ class Player:
                 print("Enter Yes or No")
                 continue
 
-    def add_to_inventory(self, item, remove_key):
+    def add_to_inventory(self, item, remove_key, player_inventory=True):
         if len(self.inventory) >= self.max_inventory:
             raise ValueError(f"Inventory is full (max {self.max_inventory} items). Clear inventory by using items or hiding it under your bed")
         
         self.inventory.append(item)
         remove_key.remove(item)
-        print(f"+{item}")
+        if player_inventory:
+            print(f"+{item}")
+        else:
+            print(f"-{item}")
 
 
     def move_room(self):
@@ -215,7 +223,7 @@ class Player:
                     type_writer(dialogue["after_exchange"]) #Print dialogue for when you give npc required item
                     print(f"-${requirement}")
                     print(f"+{reward} \n")
-                    self.show_inventory(self.inventory, "Inventory", MESSAGE_LENGTHS)
+                    self.show_inventory(self.inventory, "Inventory")
                     return
                 
             elif requirement_type == "item": #Check if npc wants an item
@@ -225,7 +233,7 @@ class Player:
                     type_writer(dialogue["after_exchange"]) #Print dialogue for when you give npc required item
                     print(f"-{requirement}")
                     print(f"+{reward} ")
-                    self.show_inventory(self.inventory, "Inventory", MESSAGE_LENGTHS)
+                    self.show_inventory(self.inventory, "Inventory")
                     return
 
 
@@ -251,13 +259,13 @@ class Player:
                     self.bed_inventory.append(item)
                     self.inventory.remove(item)
                     print(f"+{item}")
-                self.show_inventory(self.bed_inventory, "Bed inventory", MESSAGE_LENGTHS)
+                self.show_inventory(self.bed_inventory, "Bed inventory")
 
             else:
                 self.bed_inventory.append(choice)
                 self.inventory.remove(choice)
                 print(f"+{choice}")
-                self.show_inventory(self.bed_inventory, "Bed inventory", MESSAGE_LENGTHS)
+                self.show_inventory(self.bed_inventory, "Bed inventory")
 
         else:
             print("You don't have anything to hide")
@@ -284,7 +292,7 @@ class Player:
                         except ValueError as e:
                             print(f"\n{e}\n")
 
-                    self.show_inventory(self.inventory, "Inventory", LONGER_MESSAGE_LENGTHS)
+                    self.show_inventory(self.inventory, "Inventory")
                     break
 
                 else:
@@ -293,7 +301,7 @@ class Player:
                     except ValueError as e:
                         print(f"\n{e}\n")
 
-                self.show_inventory(self.inventory, "Inventory", LONGER_MESSAGE_LENGTHS)
+                self.show_inventory(self.inventory, "Inventory")
                 break
 
             else:
@@ -451,7 +459,7 @@ class Player:
                 self.inventory.append("Food")
                 print("You succesfully stole food!")
                 print("+Food")
-                self.show_inventory(self.inventory, "Inventory", MESSAGE_LENGTHS)
+                self.show_inventory(self.inventory, "Inventory")
 
                 return
             else:
@@ -558,7 +566,7 @@ class Player:
 
 
 
-    def show_inventory(self, inventory, name, seconds):
+    def show_inventory(self, inventory, name):
         if inventory:
             print(f"{name}: {', '.join(inventory)} \n")
         else:
@@ -566,6 +574,7 @@ class Player:
 
         input("Press enter to continue\n")
         clear_screen()
+
 
     def pick_from_choices(self, prompt, options):
         while True:
@@ -819,7 +828,7 @@ def type_writer(text, delay=0.03, ask_for_input=True):
 
     if ask_for_input:
         input("Press enter to continue \n") #Gives user time to read the text before clearing the screen
-    clear_screen()
+        clear_screen()
 
 
 #----Game Loop----
