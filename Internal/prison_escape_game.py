@@ -13,12 +13,11 @@ import time
 import sys
 
 #VARIABLES
-INSTRUCTIONS = "\nWelcome to PRISON ESCAPE \n" \
-               "Your goal is to escape the prison! \n" \
-               "There are three possible escape routes. Route 1 is the easiest, while Route 3 is the most difficult. \n" \
-               "Do not press enter while the game  \n" \
-               "Type quit at anytime to stop playing \n" \
-               "Good Luck!!! \n"
+INSTRUCTIONS = "HI"#"\nWelcome to PRISON ESCAPE \n" \
+#                "Your goal is to escape the prison! \n" \
+#                "There are three possible escape routes. Route 1 is the easiest, while Route 3 is the most difficult. \n" \
+#                "Do not press enter while text is being displayed. \n" \
+#                "Good Luck!!! \n"
 
 STARTING_MAP = "Workshop \n" \
         "|       \\ \n" \
@@ -84,10 +83,10 @@ class Player:
             VENT_ESCAPE: self.vent_escape
         }
 
-        self.inventory = ["Makeshift weapon", "Screwdriver"]
+        self.inventory = []
         self.max_inventory = 3
         self.bed_inventory = []
-        self.money = 10
+        self.money = 0
         self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
         self.length_of_vent_sequence = 5 #Length of direction sequence in vent mini game, can be changed to make mini game easier or harder
@@ -213,7 +212,7 @@ class Player:
                 if self.money >= requirement:
                     self.money -= requirement
                     self.inventory.append(reward)
-                    print(dialogue["after_exchange"]) #Print dialogue for when you give npc required item
+                    type_writer(dialogue["after_exchange"]) #Print dialogue for when you give npc required item
                     print(f"-${requirement}")
                     print(f"+{reward} \n")
                     self.show_inventory(self.inventory, "Inventory", MESSAGE_LENGTHS)
@@ -223,16 +222,16 @@ class Player:
                 if requirement in self.inventory:
                     self.inventory.remove(requirement)
                     self.inventory.append(reward)
-                    print(dialogue["after_exchange"]) #Print dialogue for when you give npc required item
+                    type_writer(dialogue["after_exchange"]) #Print dialogue for when you give npc required item
                     print(f"-{requirement}")
                     print(f"+{reward} ")
                     self.show_inventory(self.inventory, "Inventory", MESSAGE_LENGTHS)
                     return
 
 
-            print(dialogue["already_spoken"]) # Print dialogue for if user has already spoken to npc
+            type_writer(dialogue["already_spoken"]) # Print dialogue for if user has already spoken to npc
         else:
-            print(dialogue["intro"]) # Print dialogue for npc opening script
+            type_writer(dialogue["intro"]) # Print dialogue for npc opening script
             self.player_location.npcs.already_spoken_to = True
 
 
@@ -565,7 +564,7 @@ class Player:
         else:
             print(f"{name} empty \n")
 
-        time.sleep(seconds)
+        input("Press enter to continue\n")
         clear_screen()
 
     def pick_from_choices(self, prompt, options):
@@ -809,7 +808,7 @@ else:
         termios.tcflush(sys.stdin, termios.TCIFLUSH)
 
 
-def type_writer(text, delay=0.03):
+def type_writer(text, delay=0.03, ask_for_input=True):
     clear_input_buffer() #Clear any user input from being entered while text is being printed
     for char in text:
         sys.stdout.write(char) #Write character to the terminal without a newline
@@ -817,7 +816,9 @@ def type_writer(text, delay=0.03):
         time.sleep(delay) #Wait a short delay before next character
     print() #Print a newline at the end of the text
     clear_input_buffer()
-    input("Press enter to continue \n") #Gives user time to read the text before clearing the screen
+
+    if ask_for_input:
+        input("Press enter to continue \n") #Gives user time to read the text before clearing the screen
     clear_screen()
 
 
