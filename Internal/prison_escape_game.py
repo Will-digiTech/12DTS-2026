@@ -10,12 +10,13 @@
 import random
 import os
 import time
+import sys
 
 #VARIABLES
 INSTRUCTIONS = "\nWelcome to PRISON ESCAPE \n" \
                "Your goal is to escape the prison! \n" \
-               "Each playthrough the items to help you escape are randomly littered throughout the rooms \n" \
-               "Type restart at anytime to restart \n" \
+               "There are three possible escape routes. Route 1 is the easiest, while Route 3 is the most difficult. \n" \
+               "Do not press enter while the game  \n" \
                "Type quit at anytime to stop playing \n" \
                "Good Luck!!! \n"
 
@@ -46,16 +47,22 @@ LONGER_MESSAGE_LENGTHS = 5
 
 #CLASSES
 class Room:
-    def __init__(self, name, description, actions, items, exits, npcs=None):
+    def __init__(self, name, room_text, actions, items, exits, npcs=None, has_visited=False):
         self.name = name
-        self.description = description
+        self.room_text = room_text
         self.actions = actions
         self.items = items
         self.exits = exits
         self.npcs = npcs if npcs else []
+        self.has_visited = has_visited
 
     def show_description(self):
-        print(self.description)
+        clear_screen()
+        if not self.has_visited:
+            type_writer(self.room_text["location"] + "\n" + self.room_text["description"])
+            self.has_visited = True
+        else:
+            type_writer(self.room_text["location"])
 
 
 class Player:
@@ -89,14 +96,15 @@ class Player:
 
     def action(self):
         while True:
+            self.player_location.show_description()
+        
             indexed_loop(self.player_location.actions)
 
             chosen_action = self.pick_from_choices("\nChoose action: ", self.player_location.actions)
 
             action_function = self.action_functions[chosen_action]
             action_function()
-
-            break
+            
 
 
     def look_around(self):
@@ -575,33 +583,6 @@ class Player:
                 print("Please input a valid number")
 
 
-def countdown():
-    print("Starting in ...")
-    print("3")
-    time.sleep(1)
-    print("2")
-    time.sleep(1)
-    print("1 \n")
-    time.sleep(1)
-
-def indexed_loop(looped_list):
-    for index, value in enumerate(looped_list):
-        print(f"{index + 1}: {value.capitalize()}")
-
-def display_a_message(message, seconds):
-    clear_screen()
-    print(message)
-    time.sleep(seconds)
-    clear_screen()
-
-def game_over_lost():
-    print("Game over!")
-    quit()
-
-def game_over_won(ending):
-    print("Congratulations! You successfully escaped the prison.")
-    print(f"Ending {ending}/3")
-    quit()
 
 class NPC:
     def __init__(self, name, dialogue, exchange):
@@ -645,8 +626,11 @@ Bob_NPC = NPC(
 #ROOM CLASS OBJECTS
 cell = Room(
     "cell",
-    "You are in your Cell. \nIt's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n", #Description
-    [CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED, VENT_ESCAPE], #Actions
+    {
+        "location": "You are in your Cell",
+        "description": "It's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n"
+    },
+    [CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED], #Actions
     ["Spoon", "Fork", "Knife", "Scissors"], #Items
     ["workshop", "bathroom", "cafeteria"], #Exits
     npcs=Derek_NPC
@@ -654,7 +638,10 @@ cell = Room(
 
 cafeteria = Room(
     "cafeteria",
-    "You are in the Cafeteria. \nIt's a loud place with", #Description
+    {
+        "location": "You are in the Cafeteria",
+        "description": "It's a loud place with lots of prisoners. The food is terrible and the service is even worse. \n"
+    },
     [CHECK, MOVE, STEAL_FOOD], #Actions
     [], #Items
     ["cell", "yard", "kitchen"] #Exits
@@ -662,7 +649,10 @@ cafeteria = Room(
 
 yard = Room(
     "yard",
-    "You are in the Yard. \n", #Description
+    {
+        "location": "You are in the Yard",
+        "description": "It's a long area that stretches from the West to East side of the prison. The walls look climbable with the right tools. \n"
+    },
     [CHECK, MOVE, CLIMB_WALL], #Actions
     [], #Items
     ["cafeteria", "kitchen"] #Exits
@@ -670,7 +660,10 @@ yard = Room(
 
 kitchen = Room(
     "kitchen",
-    "You are in the Kitchen. \n", #Description
+    {
+        "location": "You are in the Kitchen",
+        "description": "It's a dirty room where prisoners can do shifts to earn money. There is also a guard stationed here. \n"
+    },
     [CHECK, MOVE, KITCHEN_SHIFT, TAKE_GUARD_UNIFROM], #Actions
     [], #Items
     ["cafeteria", "yard"] #Exits
@@ -678,8 +671,11 @@ kitchen = Room(
 
 bathroom = Room(
     "bathroom",
-    "You are in the Bathroom. \n", #Description
-    [CHECK, MOVE, TALK], #Actions
+    {
+        "location": "You are in the Bathroom",
+        "description": "It's got 5 cubicles all with broken doors. A strange prisoner is sitting in the corner, muttering to himself. There is also a vent above one of the cubicles. \n"
+    },
+    [CHECK, MOVE, TALK, VENT_ESCAPE], #Actions
     ["Toothbrush"], #Items
     ["cell", "workshop"], #Exits
     npcs=Bob_NPC
@@ -687,7 +683,10 @@ bathroom = Room(
 
 workshop = Room(
     "workshop",
-    "You are in the Workshop. \n", #Description
+    {
+        "location": "You are in the Workshop",
+        "description": "It's a small room that offers a shift for money and a place to craft items. There is also another prisoner who spends all his time here. \n"
+    },
     [CHECK, MOVE, TALK, WORKSHOP_SHIFT], #Actions
     [], #Items
     ["cell", "bathroom"], #Exits
@@ -743,6 +742,34 @@ wall_climb_escape_text = {
 
 
 #FUNCTIONS
+def countdown():
+    print("Starting in ...")
+    print("3")
+    time.sleep(1)
+    print("2")
+    time.sleep(1)
+    print("1 \n")
+    time.sleep(1)
+
+def indexed_loop(looped_list):
+    for index, value in enumerate(looped_list):
+        print(f"{index + 1}: {value.capitalize()}")
+
+def display_a_message(message, seconds):
+    clear_screen()
+    print(message)
+    time.sleep(seconds)
+    clear_screen()
+
+def game_over_lost():
+    print("Game over!")
+    quit()
+
+def game_over_won(ending):
+    print("Congratulations! You successfully escaped the prison.")
+    print(f"Ending {ending}/3")
+    quit()
+
 def show_map():
     #Creating strings for the locations on the map which are mutable. The room you are in shows as ALL CAPS.
     w_name = workshop.name
@@ -770,19 +797,38 @@ def clear_screen():
         # Command for Linux, Mac, and other systems
         _ = os.system('clear')
 
+##Searhed this up online to clear the input from the user while text is on the screen. Game would break if user inputs something when they are not supposed to##
+if os.name == 'nt':
+    import msvcrt
+    def clear_input_buffer():
+        while msvcrt.kbhit():
+            msvcrt.getch()
+else:
+    import termios
+    def clear_input_buffer():
+        termios.tcflush(sys.stdin, termios.TCIFLUSH)
+
+
+def type_writer(text, delay=0.03):
+    clear_input_buffer() #Clear any user input from being entered while text is being printed
+    for char in text:
+        sys.stdout.write(char) #Write character to the terminal without a newline
+        sys.stdout.flush() #Tells python to immediately print the character instead of waiting for the buffer to fill up
+        time.sleep(delay) #Wait a short delay before next character
+    print() #Print a newline at the end of the text
+    clear_input_buffer()
+    input("Press enter to continue \n") #Gives user time to read the text before clearing the screen
+    clear_screen()
+
+
 #----Game Loop----
 clear_screen()
-print(INSTRUCTIONS) #Give user game instructions
+type_writer(INSTRUCTIONS) #Give user game instructions
 print("----Prison Map----")
 print(STARTING_MAP)
 input("Press enter to start game \n")
 clear_screen()
 
 while True:
-    print(player.player_location.description) #Room description
     player.action()
-
-    # player.look_around()
-    # player.move_room()
-
 
