@@ -39,6 +39,7 @@ GET_ITEM_BED = "Get stored items from under bed"
 TAKE_GUARD_UNIFROM = "Attempt to beat up guard"
 CLIMB_WALL = "Attempt to climb wall"
 VENT_ESCAPE = "Climb through vent"
+CRAFT = "Craft an item"
 
 MESSAGE_LENGTHS = 3
 LONGER_MESSAGE_LENGTHS = 5
@@ -80,10 +81,11 @@ class Player:
             GET_ITEM_BED: self.get_item_from_bed,
             TAKE_GUARD_UNIFROM: self.knock_out_guard,
             CLIMB_WALL: self.climb_wall,
-            VENT_ESCAPE: self.vent_escape
+            VENT_ESCAPE: self.vent_escape,
+            CRAFT: self.craft
         }
 
-        self.inventory = ["Screwdriver", "Makeshift weapon"]
+        self.inventory = []
         self.max_inventory = 3
         self.bed_inventory = []
         self.money = 10
@@ -305,6 +307,20 @@ class Player:
             else:
                 type_writer("There are no stored items under your bed")
                 break
+
+
+    def craft(self):
+        for item in craftable_items:
+            if self.check_craft_items(item):
+                print(f"You can craft a {item}")
+
+        #ADD CODE FOR GIVING PLAYER ITEM AND REMOVING USED ITEMS
+
+    def check_craft_items(self, item):
+        for required_item in craftable_items[item]:
+            if required_item not in self.inventory:
+                return False
+        return True
 
 
     def kitchen_shift(self):
@@ -551,7 +567,7 @@ class Player:
 
 
     def climb_wall(self):
-        if "Grapping hook" not in self.inventory:
+        if "Grappling hook" not in self.inventory:
             type_writer(wall_climb_escape_text["No grappling hook text"])
         elif "Firework" not in self.inventory:
             type_writer(wall_climb_escape_text["No firework text"])
@@ -634,7 +650,7 @@ cell = Room(
         "location": "You are in your Cell",
         "description": "It's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n"
     },
-    [CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED], #Actions
+    [CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED, CRAFT], #Actions
     ["Spoon", "Fork", "Knife", "Scissors"], #Items
     ["workshop", "bathroom", "cafeteria"], #Exits
     npcs=Derek_NPC
@@ -707,8 +723,14 @@ rooms = {
 }
 
 
+#Crafting
+craftable_items = {"Makeshift Weapon": ["Toothbrush", "Scrap metal"],
+                   "Makeshift Grappling hook": ["Rope", "Scrap metal"],
+                   "Lockpick": ["Screwdriver", "Scrap metal"]}
+
+
 #PLAYER CLASS OBJECT
-player = Player(rooms["kitchen"], rooms)
+player = Player(rooms["cell"], rooms)
 
 
 #Escape prison texts
