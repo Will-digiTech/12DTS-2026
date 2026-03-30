@@ -56,7 +56,7 @@ class Room:
         self.has_visited = has_visited
 
     def show_description(self):
-        clear_screen()
+        # clear_screen()
         if not self.has_visited:
             type_writer(self.room_text["location"] + "\n" + self.room_text["description"])
             self.has_visited = True
@@ -83,13 +83,13 @@ class Player:
             VENT_ESCAPE: self.vent_escape
         }
 
-        self.inventory = []
+        self.inventory = ["Screwdriver", "Makeshift weapon"]
         self.max_inventory = 3
         self.bed_inventory = []
         self.money = 10
         self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
-        self.length_of_vent_sequence = 5 #Length of direction sequence in vent mini game, can be changed to make mini game easier or harder
+        self.length_of_vent_sequence = 5 #Length of direction sequence in vent mini-game, can be changed to make mini-game easier or harder
         self.guard_id = random.randint(10000, 99999) #Random guard ID number for final escape
 
 
@@ -110,7 +110,7 @@ class Player:
         clear_screen()
         if len(self.player_location.items) > 1:
             joined_items = ", ".join(self.player_location.items[:-1]) + ' and ' + self.player_location.items[-1] #Displays items found in Enlgish
-            type_writer(f"\nYou see a {joined_items}\n")
+            type_writer(f"You see a {joined_items}\n")
 
             self.pick_up_item()
 
@@ -173,6 +173,7 @@ class Player:
                 continue
 
     def add_to_inventory(self, item, remove_key, player_inventory=True):
+        clear_screen()
         if len(self.inventory) >= self.max_inventory:
             raise ValueError(f"Inventory is full (max {self.max_inventory} items). Clear inventory by using items or hiding it under your bed")
         
@@ -195,12 +196,8 @@ class Player:
 
         chosen_room = self.pick_from_choices("Choose a room to go to: ", options)
 
-        if chosen_room == "Stay in current room":
-            print("You chose to stay")
-        else:
+        if chosen_room != "Stay in current room":
             self.player_location = self.rooms[chosen_room] #Update player location
-            print(f"You chose {chosen_room}")  # Print chosen room
-        
 
         clear_screen()
 
@@ -253,18 +250,19 @@ class Player:
             indexed_loop(options)
 
             choice = self.pick_from_choices("\nChoose item to hide under the bed: ", options)
+            clear_screen()
 
             if choice == "Hide all items":
                 for item in self.inventory[:]:
                     self.bed_inventory.append(item)
                     self.inventory.remove(item)
-                    print(f"+{item}")
+                    print(f"-{item}")
                 self.show_inventory(self.bed_inventory, "Bed inventory")
 
             else:
                 self.bed_inventory.append(choice)
                 self.inventory.remove(choice)
-                print(f"+{choice}")
+                print(f"-{choice}")
                 self.show_inventory(self.bed_inventory, "Bed inventory")
 
         else:
@@ -305,13 +303,13 @@ class Player:
                 break
 
             else:
-                display_a_message("There are no stored items under your bed", 3)
+                type_writer("There are no stored items under your bed")
                 break
 
 
     def kitchen_shift(self):
         if self.last_shift == KITCHEN_SHIFT:
-            print("\nYou can't do the same shift twice in a row, choose a different shift\n")
+            type_writer("You can't do the same shift twice in a row, choose a different shift")
             return
 
         # MINI GAME to complete kitchen shift
@@ -319,11 +317,8 @@ class Player:
         num_of_lifes = 2 #Changable later if I want to give more lives
         anagram_foods = ["TOMATO", "CHEESE", "APPLE", "MILK", "POTATO", "BREAD"] #All possible foods for anagrams
 
-        print() #Add space for readibility
-        print("You started your shift in the Kitchen")
-        print("You must solve these anagrams by typing the correct food.")
-        print("You must get 5 correct to finish your shift")
-        print(f"You have have {num_of_lifes} lives, if you fail you get kicked off your shift and earn no money.")
+        #Kitchen shift instructions
+        type_writer("You started your shift in the Kitchen.\n" + "You must solve these anagrams by typing the correct food.\n" + "You must get 5 correct to finish your shift.\n" + f"You have have {num_of_lifes} lives, if you fail you get kicked off your shift and earn no money.\n")
 
     
         while correct_food_counter < 5:
@@ -470,19 +465,19 @@ class Player:
     def vent_escape(self):
  
         if "Screwdriver" in self.inventory:
-            display_a_message(vent_escape_text["Correct item"]["True"], 4)
+            type_writer(vent_escape_text["Correct item"]["True"])
         else:
-            display_a_message(vent_escape_text["Correct item"]["False"], 4)
+            type_writer(vent_escape_text["Correct item"]["False"])
             return
 
 
         if self.vent_mini_game():
-            display_a_message(vent_escape_text["Mini game result"]["True"], 6)
+            type_writer(vent_escape_text["Mini game result"]["True"])
         else:
-            display_a_message(vent_escape_text["Mini game result"]["False"], 6)
+            type_writer(vent_escape_text["Mini game result"]["False"])
             game_over_lost()
 
-        display_a_message(vent_escape_text["Final escape text"].format(guard_id=self.guard_id), 5)
+        type_writer(vent_escape_text["Final escape text"].format(guard_id=self.guard_id))
         
         if self.id_check():
             game_over_won(1)
@@ -518,23 +513,24 @@ class Player:
         #Chance of escaping without a makeshift weapon (1% success rate)
         if "Makeshift weapon" not in self.inventory:
             if random.random() > 0.01:
-                display_a_message("You tried to sneak attack the guard without a makeshift weapon, he beats you up.", 5)
+                type_writer(guard_disguise_text["Attack guard no weapon text"]["Unsuccessful"])
                 game_over_lost()
             else:
-                display_a_message("You succesfully beat the guard with no makeshift weapon.", 4)
+                type_writer(guard_disguise_text["Attack guard no weapon text"]["Successful"])
 
         else:
-            display_a_message(guard_disguise_text["Attack guard text"], 5)
+            type_writer(guard_disguise_text["Attack guard text"])
 
         #Chance of taking guards clothes wihtout getting caught (70% success rate)
         if random.random() > 0.3:
-            display_a_message(guard_disguise_text["Take uniform"]["success"], 5)
+            type_writer(guard_disguise_text["Take uniform"]["success"])
         else:
-            display_a_message(guard_disguise_text["Take uniform"]["fail"], 5)
+            type_writer(guard_disguise_text["Take uniform"]["fail"])
             game_over_lost()
 
-        print(guard_disguise_text["In uniform text"].format(guard_id=player.guard_id))
-        input("Press enter to continue")
+        type_writer(guard_disguise_text["In uniform text"].format(guard_id=player.guard_id))
+        # print(guard_disguise_text["In uniform text"].format(guard_id=player.guard_id))
+        # input("Press enter to continue")
 
         if self.id_check():
             game_over_won(2)
@@ -543,25 +539,25 @@ class Player:
         
     def id_check(self):
         clear_screen()
-        print(guard_disguise_text["Guard id check"])
+        type_writer(guard_disguise_text["Guard id check"])
         user_input = int(input("\nEnter guard ID number : "))
 
         if user_input == self.guard_id:
-            print(guard_disguise_text["Correct Id"])
+            type_writer(guard_disguise_text["Correct Id"])
             return True
         else:
-            print(guard_disguise_text["Incorrect Id"])
+            type_writer(guard_disguise_text["Incorrect Id"])
             return False
 
 
     def climb_wall(self):
         if "Grapping hook" not in self.inventory:
-            display_a_message(wall_climb_escape_text["No grappling hook text"], 8)
+            type_writer(wall_climb_escape_text["No grappling hook text"])
         elif "Firework" not in self.inventory:
-            display_a_message(wall_climb_escape_text["No firework text"], 8)
+            type_writer(wall_climb_escape_text["No firework text"])
         else:
             clear_screen()
-            print(wall_climb_escape_text["Win text"])
+            type_writer(wall_climb_escape_text["Win text"])
             game_over_won(3)
 
 
@@ -712,7 +708,7 @@ rooms = {
 
 
 #PLAYER CLASS OBJECT
-player = Player(rooms["cell"], rooms)
+player = Player(rooms["kitchen"], rooms)
 
 
 #Escape prison texts
@@ -727,6 +723,10 @@ vent_escape_text = {
 }
 
 guard_disguise_text = {
+    "Attack guard no weapon text": {
+        "Successful": "You succesfully beat the guard with no makeshift weapon.",
+        "Unsuccessful": "You tried to sneak attack the guard without a makeshift weapon, he beats you up."
+    },
     "Attack guard text": "You use your makeshift weapon to incapacitate the guard.",
     "Take uniform": {
         "success": "You successfully take the guards uniform without anyone catching you.",
@@ -818,6 +818,7 @@ else:
 
 
 def type_writer(text, delay=0.03, ask_for_input=True):
+    clear_screen()
     clear_input_buffer() #Clear any user input from being entered while text is being printed
     for char in text:
         sys.stdout.write(char) #Write character to the terminal without a newline
