@@ -13,11 +13,11 @@ import time
 import sys
 
 #VARIABLES
-INSTRUCTIONS = "HI"#"\nWelcome to PRISON ESCAPE \n" \
-#                "Your goal is to escape the prison! \n" \
-#                "There are three possible escape routes. Route 1 is the easiest, while Route 3 is the most difficult. \n" \
-#                "Do not press enter while text is being displayed. \n" \
-#                "Good Luck!!! \n"
+INSTRUCTIONS = "\nWelcome to PRISON ESCAPE \n" \
+                "Your goal is to escape the prison! \n" \
+                "There are three possible escape routes. Route 1 is the easiest, while Route 3 is the most difficult. \n" \
+                "Do not press enter while text is being displayed. \n" \
+                "Good Luck!!! \n"
 
 STARTING_MAP = "Workshop \n" \
         "|       \\ \n" \
@@ -174,13 +174,13 @@ class Player:
                 print("Enter Yes or No")
                 continue
 
-    def add_to_inventory(self, item, remove_key=True, player_inventory=True):
+    def add_to_inventory(self, item, remove_key, remove=True, player_inventory=True):
         clear_screen()
         if len(self.inventory) >= self.max_inventory:
             raise ValueError(f"Inventory is full (max {self.max_inventory} items). Clear inventory by using items or hiding it under your bed")
         
         self.inventory.append(item)
-        if remove_key:
+        if remove:
             remove_key.remove(item)
 
         if player_inventory:
@@ -345,7 +345,7 @@ class Player:
                 self.inventory.remove(material)
 
         try:
-            self.add_to_inventory(chosen_item, remove_key=False)
+            self.add_to_inventory(chosen_item, None, remove=False)
             self.show_inventory(self.inventory, "Player Inventory")
             
         except ValueError as e:
@@ -436,13 +436,7 @@ class Player:
         num_to_complete = 5
 
         print() #Add space for readibility
-        print("You started your shift in the Workshop")
-        print("You will get given a number plate back to front and you must type it the correct way")
-        print("For example you might be given '321CBA' and you must type 'ABC123'")
-        print(f"You have {allowed_time} seconds to type it or you fail your shift")
-        print(f"Complete {num_to_complete} number plates to complete your shift")
-        print(f"You have {num_of_lives} lives good luck!\n")
-        input("Press enter to start\n")
+        type_writer(f"You started your shift in the Workshop.\n" + "You will get given a number plate back to front and you must type it the correct way.\n" + "For example you might be given '321CBA' and you must type 'ABC123'.\n" + f"You have {allowed_time} seconds to type it or you fail your shift.\n" + f"Complete {num_to_complete} number plates to complete your shift.\n" + f"You have {num_of_lives} lives good luck!\n")
 
         while completed_num_plates < num_to_complete:
             countdown()
@@ -462,28 +456,28 @@ class Player:
             if elapsed_time < allowed_time:
                 if user_input.upper() == number_plate:
                     completed_num_plates += 1
+                    clear_screen()
                     print("You got it")
                     print(f"It took you {elapsed_time} seconds")
                     print(f"Completed number plates : {completed_num_plates}/{num_to_complete} \n")
                 else:
                     num_of_lives -= 1
-                    print("You typed it out incorrectly")
-                    print(f"You have {num_of_lives} lives remaining \n")
+                    type_writer("You typed it out incorrectly")
+                    type_writer(f"You have {num_of_lives} lives remaining \n")
             else:
                 num_of_lives -= 1
-                print("You ran out of time")
-                print(f"It took you {elapsed_time} seconds")
-                print(f"You have {num_of_lives} lives remaining \n")
+                type_writer("You ran out of time\n" + f"It took you {elapsed_time} seconds\n" + f"You have {num_of_lives} lives remaining \n")
+
 
             if num_of_lives == 0:
-                print("You failed your shift! \n")
+                type_writer("You failed your shift! \n")
                 self.last_shift = WORKSHOP_SHIFT #Update last shift to stop player doing same shift twice in a row
                 return
             
         self.money += 5
         self.last_shift = WORKSHOP_SHIFT #Update last shift to stop player doing same shift twice in a row
-        print("You successfully completed your shift and earnt 5 dollars!")
-        print(f"You now have ${self.money} in total \n")
+        type_writer("You successfully completed your shift and earnt 5 dollars!\n" + f"You now have ${self.money} in total \n")
+
 
     def steal_food(self):
         print("You are trying to take someones food without getting caught")
@@ -676,7 +670,7 @@ cell = Room(
         "location": "You are in your Cell",
         "description": "It's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n"
     },
-    [CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED, CRAFT], #Actions
+    [CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED], #Actions
     ["Spoon", "Fork", "Knife", "Scissors"], #Items
     ["workshop", "bathroom", "cafeteria"], #Exits
     npcs=Derek_NPC
@@ -733,7 +727,7 @@ workshop = Room(
         "location": "You are in the Workshop",
         "description": "It's a small room that offers a shift for money and a place to craft items. There is also another prisoner who spends all his time here. \n"
     },
-    [CHECK, MOVE, TALK, WORKSHOP_SHIFT], #Actions
+    [CHECK, MOVE, TALK, WORKSHOP_SHIFT, CRAFT], #Actions
     [], #Items
     ["cell", "bathroom"], #Exits
     npcs=Joel_NPC
@@ -751,7 +745,7 @@ rooms = {
 
 #Crafting
 craftable_items = {"Makeshift Weapon": ["Scrap metal"],
-                   "Makeshift Grappling hook": ["Rope", "Scrap metal"],
+                   "Grappling hook": ["Rope", "Scrap metal"],
                    "Lockpick": ["Screwdriver", "Scrap metal"]}
 
 
@@ -799,6 +793,7 @@ wall_climb_escape_text = {
 
 #FUNCTIONS
 def countdown():
+    clear_input_buffer()
     print("Starting in ...")
     print("3")
     time.sleep(1)
@@ -806,6 +801,7 @@ def countdown():
     time.sleep(1)
     print("1 \n")
     time.sleep(1)
+    clear_input_buffer()
 
 def indexed_loop(looped_list):
     for index, value in enumerate(looped_list):
