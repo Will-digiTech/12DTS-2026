@@ -85,7 +85,7 @@ class Player:
             CRAFT: self.craft
         }
 
-        self.inventory = []
+        self.inventory = ["Scrap metal", "Rope"]
         self.max_inventory = 3
         self.bed_inventory = []
         self.money = 10
@@ -101,7 +101,7 @@ class Player:
         
             indexed_loop(self.player_location.actions)
 
-            chosen_action = self.pick_from_choices("\nChoose action: ", self.player_location.actions)
+            chosen_action = pick_from_choices("\nChoose action: ", self.player_location.actions)
 
             action_function = self.action_functions[chosen_action]
             action_function()
@@ -147,7 +147,7 @@ class Player:
 
                 indexed_loop(options)
 
-                choice = self.pick_from_choices("\nChoose item to pick up: ", options)
+                choice = pick_from_choices("\nChoose item to pick up: ", options)
                 
                 if choice == "Pick up all items":
                     for item in self.player_location.items[:]:
@@ -174,13 +174,15 @@ class Player:
                 print("Enter Yes or No")
                 continue
 
-    def add_to_inventory(self, item, remove_key, player_inventory=True):
+    def add_to_inventory(self, item, remove_key=True, player_inventory=True):
         clear_screen()
         if len(self.inventory) >= self.max_inventory:
             raise ValueError(f"Inventory is full (max {self.max_inventory} items). Clear inventory by using items or hiding it under your bed")
         
         self.inventory.append(item)
-        remove_key.remove(item)
+        if remove_key:
+            remove_key.remove(item)
+
         if player_inventory:
             print(f"+{item}")
         else:
@@ -196,7 +198,7 @@ class Player:
 
         indexed_loop(options)
 
-        chosen_room = self.pick_from_choices("Choose a room to go to: ", options)
+        chosen_room = pick_from_choices("Choose a room to go to: ", options)
 
         if chosen_room != "Stay in current room":
             self.player_location = self.rooms[chosen_room] #Update player location
@@ -251,7 +253,7 @@ class Player:
 
             indexed_loop(options)
 
-            choice = self.pick_from_choices("\nChoose item to hide under the bed: ", options)
+            choice = pick_from_choices("\nChoose item to hide under the bed: ", options)
             clear_screen()
 
             if choice == "Hide all items":
@@ -283,7 +285,7 @@ class Player:
 
                 indexed_loop(options)
 
-                choice = self.pick_from_choices("\nChoose item to take: ", options)
+                choice = pick_from_choices("\nChoose item to take: ", options)
 
                 if choice == "Get all items from bed":
                     for item in self.bed_inventory[:]:
@@ -310,9 +312,47 @@ class Player:
 
 
     def craft(self):
+        clear_screen()
+        player_craftable_items = []
+
         for item in craftable_items:
             if self.check_craft_items(item):
-                print(f"You can craft a {item}")
+                type_writer(f"You can craft a {item}")
+                player_craftable_items.append(item)
+
+        if not player_craftable_items:
+            clear_screen()
+            print("You can't craft anything\n")
+            print("Craftable items: ")
+            for item, materials in craftable_items.items():
+                print(f"{item} --> {', '.join(materials)}")
+            input("Press enter to continue: ")
+            return
+
+        if len(player_craftable_items) == 1:
+            chosen_item = player_craftable_items[0]
+
+            
+        else:
+            indexed_loop(player_craftable_items)
+            chosen_item = pick_from_choices("Pick item to craft: ", player_craftable_items)
+
+        materials = craftable_items[chosen_item]
+
+        #Remove the required material from player's inventory
+        for material in materials:
+            if material in self.inventory: #Backup line to protect accidental error
+                self.inventory.remove(material)
+
+        try:
+            self.add_to_inventory(chosen_item, remove_key=False)
+            self.show_inventory(self.inventory, "Player Inventory")
+            
+        except ValueError as e:
+            print(f"\n{e}\n")
+
+
+
 
         #ADD CODE FOR GIVING PLAYER ITEM AND REMOVING USED ITEMS
 
@@ -588,20 +628,6 @@ class Player:
         clear_screen()
 
 
-    def pick_from_choices(self, prompt, options):
-        while True:
-            try:
-                choice = int(input(prompt))
-
-                if 1 <= choice <= len(options):
-                    return options[choice - 1]
-                
-                else:
-                    print(f"Choose option between 1 - {len(options)}")
-
-            except ValueError:
-                print("Please input a valid number")
-
 
 
 class NPC:
@@ -724,7 +750,7 @@ rooms = {
 
 
 #Crafting
-craftable_items = {"Makeshift Weapon": ["Toothbrush", "Scrap metal"],
+craftable_items = {"Makeshift Weapon": ["Scrap metal"],
                    "Makeshift Grappling hook": ["Rope", "Scrap metal"],
                    "Lockpick": ["Screwdriver", "Scrap metal"]}
 
@@ -785,6 +811,20 @@ def indexed_loop(looped_list):
     for index, value in enumerate(looped_list):
         print(f"{index + 1}: {value.capitalize()}")
 
+def pick_from_choices(prompt, options):
+    while True:
+        try:
+            choice = int(input(prompt))
+
+            if 1 <= choice <= len(options):
+                return options[choice - 1]
+            
+            else:
+                print(f"Choose option between 1 - {len(options)}")
+
+        except ValueError:
+            print("Please input a valid number")
+
 def display_a_message(message, seconds):
     clear_screen()
     print(message)
@@ -839,8 +879,9 @@ else:
         termios.tcflush(sys.stdin, termios.TCIFLUSH)
 
 
-def type_writer(text, delay=0.03, ask_for_input=True):
-    clear_screen()
+def type_writer(text, delay=0.03, ask_for_input=True, clear_screen_at_start=True):
+    if clear_screen_at_start:
+        clear_screen()
     clear_input_buffer() #Clear any user input from being entered while text is being printed
     for char in text:
         sys.stdout.write(char) #Write character to the terminal without a newline
