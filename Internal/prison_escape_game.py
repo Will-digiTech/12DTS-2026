@@ -480,10 +480,7 @@ class Player:
 
 
     def steal_food(self):
-        print("You are trying to take someones food without getting caught")
-        print("To succesfully take someones food you must press the enter button within a given time frame")
-        print("Don't press enter too early or too late to take the food.")
-        print("Good luck! \n")
+        type_writer("You are trying to take someones food without getting caught. \n" + "To succesfully take someones food you must press the enter button within a given time frame. \n" + "Don't press enter too early or too late to take the food.\n" + "Good luck! \n", ask_for_input=False)
         input("Press enter to start\n")
 
         while True:
@@ -502,14 +499,14 @@ class Player:
             print(f"{elapsed_time} seconds")
             if time_frame_min <= elapsed_time <= time_frame_max:
                 self.inventory.append("Food")
-                print("You succesfully stole food!")
+                type_writer("You succesfully stole food!")
                 print("+Food")
                 self.show_inventory(self.inventory, "Inventory")
 
                 return
             else:
-                print("You missed your opportunity")
-                print("Try again \n")
+                type_writer("You missed your opportunity", ask_for_input=False)
+                type_writer("Try again \n", clear_screen_at_start=False)
 
 
     def vent_escape(self):
