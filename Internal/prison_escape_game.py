@@ -14,10 +14,10 @@ import sys
 
 #VARIABLES
 INSTRUCTIONS = ""#\nWelcome to PRISON ESCAPE \n" \
-                #"Your goal is to escape the prison! \n" \
-            #  #  "There are three possible escape routes. Route 1 is the easiest, while Route 3 is the most difficult. \n" \
-          #      "Do not press enter while text is being displayed. \n" \
-            #    "Good Luck!!! \n"
+               # "Your goal is to escape the prison! \n" \
+                #"There are three possible escape routes. Route 1 is the easiest, while Route 3 is the most difficult. \n" \
+               # "Do not press enter while text is being displayed. \n" \
+                #"Good Luck!!! \n"
 
 STARTING_MAP = "Workshop \n" \
         "|       \\ \n" \
@@ -85,10 +85,10 @@ class Player:
             CRAFT: self.craft
         }
 
-        self.inventory = ["Screwdriver"]
+        self.inventory = []
         self.max_inventory = 3
         self.bed_inventory = []
-        self.money = 0
+        self.money = 5
         self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
         self.length_of_vent_sequence = 5 #Length of direction sequence in vent mini-game, can be changed to make mini-game easier or harder
@@ -366,7 +366,7 @@ class Player:
 
     def kitchen_shift(self):
         if self.last_shift == KITCHEN_SHIFT:
-            type_writer("You can't do the same shift twice in a row, choose a different shift")
+            type_writer("You can't do the same shift twice in a row, instead complete the workshop shift")
             return
 
         # MINI GAME to complete kitchen shift
@@ -427,7 +427,7 @@ class Player:
 
     def workshop_shift(self):
         if self.last_shift == WORKSHOP_SHIFT:
-            type_writer("\nYou can't do the same shift twice in a row, choose a different shift\n")
+            type_writer("\nYou can't do the same shift twice in a row, instead complete the kitchen shift\n")
             return
 
         #MINI GAME to complete workshop shift
@@ -463,8 +463,8 @@ class Player:
                     print(f"Completed number plates : {completed_num_plates}/{num_to_complete} \n")
                 else:
                     num_of_lives -= 1
-                    type_writer("You typed it out incorrectly")
-                    type_writer(f"You have {num_of_lives} lives remaining \n")
+                    type_writer("You typed it out incorrectly", ask_for_input=False)
+                    type_writer(f"You have {num_of_lives} lives remaining \n", clear_screen_at_start=False)
             else:
                 num_of_lives -= 1
                 type_writer("You ran out of time\n" + f"It took you {elapsed_time} seconds\n" + f"You have {num_of_lives} lives remaining \n")
@@ -665,11 +665,11 @@ Bob_NPC = NPC(
 cell = Room(
     "cell",
     {
-        "location": "",#You are in your Cell",
-        "description": "",#It's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n"
+        "location": "You are in your Cell",
+        "description": "It's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n"
     },
     [CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED], #Actions
-    ["Spoon", "Fork", "Knife", "Scissors"], #Items
+    ["Rope"], #Items
     ["workshop", "bathroom", "cafeteria"], #Exits
     npcs=Derek_NPC
 )
@@ -699,8 +699,8 @@ yard = Room(
 kitchen = Room(
     "kitchen",
     {
-        "location": "",#You are in the Kitchen",
-        "description": "",#It's a dirty room where prisoners can do shifts to earn money. There is also a guard stationed here. \n"
+        "location": "You are in the Kitchen",
+        "description": "It's a dirty room where prisoners can do shifts to earn money. There is also a guard stationed here. \n"
     },
     [CHECK, MOVE, KITCHEN_SHIFT, TAKE_GUARD_UNIFROM], #Actions
     [], #Items
@@ -722,8 +722,8 @@ bathroom = Room(
 workshop = Room(
     "workshop",
     {
-        "location": "You are in the Workshop",
-        "description": "It's a small room that offers a shift for money and a place to craft items. There is also another prisoner who spends all his time here. \n"
+        "location": "",#You are in the Workshop",
+        "description": "",#It's a small room that offers a shift for money and a place to craft items. There is also another prisoner who spends all his time here. \n"
     },
     [CHECK, MOVE, TALK, WORKSHOP_SHIFT, CRAFT], #Actions
     [], #Items
@@ -748,7 +748,7 @@ craftable_items = {"Makeshift Weapon": ["Scrap metal"],
 
 
 #PLAYER CLASS OBJECT
-player = Player(rooms["bathroom"], rooms)
+player = Player(rooms["workshop"], rooms)
 
 
 #Escape prison texts
