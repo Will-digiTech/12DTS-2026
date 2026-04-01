@@ -13,11 +13,11 @@ import time
 import sys
 
 #VARIABLES
-INSTRUCTIONS = "\nWelcome to PRISON ESCAPE \n" \
-                "Your goal is to escape the prison! \n" \
-                "There are three possible escape routes. Route 1 is the easiest, while Route 3 is the most difficult. \n" \
-                "Do not press enter while text is being displayed. \n" \
-                "Good Luck!!! \n"
+INSTRUCTIONS = ""#\nWelcome to PRISON ESCAPE \n" \
+                #"Your goal is to escape the prison! \n" \
+            #  #  "There are three possible escape routes. Route 1 is the easiest, while Route 3 is the most difficult. \n" \
+          #      "Do not press enter while text is being displayed. \n" \
+            #    "Good Luck!!! \n"
 
 STARTING_MAP = "Workshop \n" \
         "|       \\ \n" \
@@ -85,10 +85,10 @@ class Player:
             CRAFT: self.craft
         }
 
-        self.inventory = ["Scrap metal", "Rope"]
+        self.inventory = ["Screwdriver"]
         self.max_inventory = 3
         self.bed_inventory = []
-        self.money = 10
+        self.money = 0
         self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
         self.length_of_vent_sequence = 5 #Length of direction sequence in vent mini-game, can be changed to make mini-game easier or harder
@@ -130,7 +130,7 @@ class Player:
         print("Would you like to pick an item up?")
 
         while True:
-            pick_item_choice = input("Yes/No \n>").lower()
+            pick_item_choice = input("Yes/No \n> ").lower()
             print() #Add space for readibility
 
             if pick_item_choice == "yes":
@@ -150,6 +150,7 @@ class Player:
                 choice = pick_from_choices("\nChoose item to pick up: ", options)
                 
                 if choice == "Pick up all items":
+                    clear_screen()
                     for item in self.player_location.items[:]:
                         try:
                             self.add_to_inventory(item, self.player_location.items)
@@ -160,6 +161,7 @@ class Player:
                     break
                     
                 else:
+                    clear_screen()
                     try:
                         self.add_to_inventory(choice, self.player_location.items)
                     except ValueError as e:
@@ -175,9 +177,8 @@ class Player:
                 continue
 
     def add_to_inventory(self, item, remove_key, remove=True, player_inventory=True):
-        clear_screen()
         if len(self.inventory) >= self.max_inventory:
-            raise ValueError(f"Inventory is full (max {self.max_inventory} items). Clear inventory by using items or hiding it under your bed")
+            raise ValueError(f"Inventory is full (max {self.max_inventory} items). Clear inventory by using items or hiding them under your bed.")
         
         self.inventory.append(item)
         if remove:
@@ -378,6 +379,7 @@ class Player:
 
     
         while correct_food_counter < 5:
+            clear_screen()
             chosen_food = random.choice(anagram_foods) #Choose random food from list
             list_food = list(chosen_food) #Turn the immutable string into a list
             random.shuffle(list_food) #Shuffle characters in list
@@ -389,6 +391,7 @@ class Player:
             #Repeat until valid user entry
             while True:
                 try:
+                    print(f"{correct_food_counter}/5 completed \n")
                     print(anagram)
                     guess = input("Guess the food \n>")
                     if guess.isdigit():
@@ -405,28 +408,26 @@ class Player:
                 correct_food_counter += 1
                 anagram_foods.remove(chosen_food)
 
-                print("You guessed correct")
-                print(f"{correct_food_counter}/5 completed \n")
+                
                 
             else:
                 num_of_lifes -= 1
-                print("You guessed incorrect!")
+                type_writer("You guessed incorrect!", ask_for_input=False)
                 if num_of_lifes == 0:
-                    print("You failed your shift!\n")
+                    type_writer("You failed your shift!\n", clear_screen_at_start=False)
                     self.last_shift = KITCHEN_SHIFT #Update last shift to stop player doing same shift twice in a row
                     return
                 else:
-                    print(f"You have used a life, you have {num_of_lifes} remaining")
+                    type_writer(f"You have used a life, you have {num_of_lifes} remaining.", clear_screen_at_start=False)
 
         self.money += 5
         self.last_shift = KITCHEN_SHIFT #Update last shift to stop player doing same shift twice in a row
-        print("Congratulations you completed your shift and earnt 5 dollars")
-        print(f"You now have ${self.money} in total")
+        type_writer("Congratulations you completed your shift and earnt 5 dollars", ask_for_input=False)
+        type_writer(f"You now have ${self.money} in total", clear_screen_at_start=False)
 
     def workshop_shift(self):
-
         if self.last_shift == WORKSHOP_SHIFT:
-            print("\nYou can't do the same shift twice in a row, choose a different shift\n")
+            type_writer("\nYou can't do the same shift twice in a row, choose a different shift\n")
             return
 
         #MINI GAME to complete workshop shift
@@ -537,7 +538,7 @@ class Player:
         length_of_sequence = 5
         randomised_sequence = []
 
-        print(vent_escape_text["Mini game instructions"].format(length_of_sequence=player.length_of_vent_sequence))
+        type_writer(vent_escape_text["Mini game instructions"].format(length_of_sequence=player.length_of_vent_sequence))
 
         print("Remeber the sequence: ")
         for i in range(length_of_sequence):
@@ -586,7 +587,7 @@ class Player:
         
     def id_check(self):
         clear_screen()
-        type_writer(guard_disguise_text["Guard id check"])
+        type_writer(guard_disguise_text["Guard id check"], ask_for_input=False)
         user_input = int(input("\nEnter guard ID number : "))
 
         if user_input == self.guard_id:
@@ -664,8 +665,8 @@ Bob_NPC = NPC(
 cell = Room(
     "cell",
     {
-        "location": "You are in your Cell",
-        "description": "It's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n"
+        "location": "",#You are in your Cell",
+        "description": "",#It's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n"
     },
     [CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED], #Actions
     ["Spoon", "Fork", "Knife", "Scissors"], #Items
@@ -698,8 +699,8 @@ yard = Room(
 kitchen = Room(
     "kitchen",
     {
-        "location": "You are in the Kitchen",
-        "description": "It's a dirty room where prisoners can do shifts to earn money. There is also a guard stationed here. \n"
+        "location": "",#You are in the Kitchen",
+        "description": "",#It's a dirty room where prisoners can do shifts to earn money. There is also a guard stationed here. \n"
     },
     [CHECK, MOVE, KITCHEN_SHIFT, TAKE_GUARD_UNIFROM], #Actions
     [], #Items
@@ -747,15 +748,15 @@ craftable_items = {"Makeshift Weapon": ["Scrap metal"],
 
 
 #PLAYER CLASS OBJECT
-player = Player(rooms["cell"], rooms)
+player = Player(rooms["bathroom"], rooms)
 
 
 #Escape prison texts
 vent_escape_text = {
     "Correct item": {"True": "You use your screwdriver to open the vent and climb through.", 
                     "False": "You need a screwdriver to open the vent."},
-    "Mini game instructions": "You are crawing through the vent, to make sure you don't get lost you must type the correct sequence of directions. \nYou will be given a sequence of {length_of_sequence} dirrections either left or right, for example 'left, right, left, left, right'. You must type the sequence correctly to make it through the vent. \nTo type the sequence correctly seperate dirrections with a space, e.g 'left right left' \nGood luck! \n",
-    "Mini game result": {"True": "You successfully make your way to the guards office and jump in.", 
+    "Mini game instructions": "You are crawing through the vent, to make sure you don't get lost you must type the correct sequence of directions. \nYou will be given a sequence of {length_of_sequence} directions either left or right, for example 'left, right, left, left, right'. You must type the sequence correctly to make it through the vent. \nTo type the sequence correctly seperate directions with a space, e.g 'left right left' \nGood luck! \n",
+    "Mini game result": {"True": "You successfully crawl the correct way and make your way to the guards office. You check the coast is clear and jump in.", 
                          "False": "You get lost in the vents. Eventually, the guards notice an open vent and find you."},
     "Final escape text": "You jump into the guards office and quickly hide. A guard walks in and you jump attack him, knocking him out. You take the guards uniform and his keycard. His ID number is {guard_id}. All you have to do is walk out the front door."
         
