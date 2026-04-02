@@ -117,7 +117,7 @@ class Player:
             self.pick_up_item()
 
         elif self.player_location.items:
-            type_writer(f"\nYou see a {self.player_location.items[0]}\n", ask_for_input=False)
+            type_writer(f"You see a {self.player_location.items[0]}\n", ask_for_input=False)
 
             self.pick_up_item()
         else:
@@ -211,10 +211,15 @@ class Player:
         clear_screen()
         dialogue = self.player_location.npcs.dialogue
         already_spoken_to = self.player_location.npcs.already_spoken_to
+        has_given_reward = self.player_location.npcs.has_given_reward
+
         requirement_type = self.player_location.npcs.exchange["type"]
         requirement = self.player_location.npcs.exchange["requirement"]
         reward = self.player_location.npcs.exchange["reward"]
 
+        if has_given_reward:
+            type_writer(dialogue["after_exchange"]) #Print dialogue for if user has already spoken to npc and completed exchange
+            return
 
         if already_spoken_to:
             #Check if user has required items NPC is requesting.
@@ -222,7 +227,8 @@ class Player:
                 if self.money >= requirement:
                     self.money -= requirement
                     self.inventory.append(reward)
-                    type_writer(dialogue["after_exchange"]) #Print dialogue for when you give npc required item
+                    self.player_location.npcs.has_given_reward = True #Set flag to true to show that npc has given reward
+                    type_writer(dialogue["exchange"]) #Print dialogue for when you give npc required item
                     print(f"-${requirement}")
                     print(f"+{reward} \n")
                     self.show_inventory(self.inventory, "Inventory")
@@ -232,7 +238,8 @@ class Player:
                 if requirement in self.inventory:
                     self.inventory.remove(requirement)
                     self.inventory.append(reward)
-                    type_writer(dialogue["after_exchange"]) #Print dialogue for when you give npc required item
+                    self.player_location.npcs.has_given_reward = True #Set flag to true to show that npc has given reward
+                    type_writer(dialogue["exchange"]) #Print dialogue for when you give npc required item
                     print(f"-{requirement}")
                     print(f"+{reward} ")
                     self.show_inventory(self.inventory, "Inventory")
@@ -492,21 +499,23 @@ class Player:
             start = time.time()
             stop_timer = input(f"Press enter between {time_frame_min} and {time_frame_max} seconds. \n>")
             if stop_timer != "":
-                print("Only press enter")
+                clear_screen()
+                print("Only press enter \n")
                 continue
             end = time.time()
             elapsed_time = round(end - start, 2)
 
+            clear_screen()
             print(f"{elapsed_time} seconds")
             if time_frame_min <= elapsed_time <= time_frame_max:
                 self.inventory.append("Food")
-                type_writer("You succesfully stole food!")
+                type_writer("You succesfully stole food!", clear_screen_at_start=False)
                 print("+Food")
                 self.show_inventory(self.inventory, "Inventory")
 
                 return
             else:
-                type_writer("You missed your opportunity", ask_for_input=False)
+                type_writer("You missed your opportunity", ask_for_input=False, clear_screen_at_start=False)
                 type_writer("Try again \n", clear_screen_at_start=False)
 
 
@@ -628,6 +637,7 @@ class NPC:
         self.dialogue = dialogue
         self.exchange = exchange
         self.already_spoken_to = False
+        self.has_given_reward = False #Flag to track if the NPC has given a reward
 
 
 #NPC CLASS OBJECTS
@@ -635,7 +645,9 @@ Derek_NPC = NPC(
     "Derek",
     {"intro": "Yo, Derek is me. I got a mission for you. If you get me 10 dollars i'll give you a screwdriver. Get money from doing a shift in the Kitchen or Workshop then get back to me. \n",
      "already_spoken": "I already told you. Go get me money from a shift in the Kitchen or Workshop and you can have the screwdriver. \n",
-     "after_exchange": "I appreciate it bro. Heres your screwdriver."},
+     "exchange": "I appreciate it bro. Heres your screwdriver. \n",
+     "after_exchange": "Thanks for the money man! \n"},
+
     {"type": "money",
      "requirement": 10,
      "reward": "Screwdriver"}
@@ -645,7 +657,8 @@ Joel_NPC = NPC(
     "Joel",
     {"intro": "Hey man, I'm Joel. Look, I'm super busy at the moment and have a little task for you. I left my toothbrush in the bathroom, if you go and get it for me, i'll give you a piece of scrap metal which is great for crafting items. \n",
      "already_spoken": "Get back to me when you have my toothbrush and i'll give you the scrap metal. \n",
-     "after_exchange": "Thanks man! Here's the scrap metal."},
+     "exchange": "Thanks man! Here's the scrap metal. \n",
+     "after_exchange": "Pleasure doing business with you! \n"},
     {"type": "item",
      "requirement": "Toothbrush",
      "reward": "Scrap metal"}
@@ -655,7 +668,8 @@ Bob_NPC = NPC(
     "Bob",
     {"intro": "Hello there! It's me BOB. Everyone hates me in the cafeteria, could you please please please go get me some food. If you do I'll give you this firework!!! \n",
      "already_spoken": "I'm begging you man please get me some food I'm starving! Then you can have the firework. It's perfect for a good distraction. \n",
-     "after_exchange": "YAY, i've been starving for so long! Thanks so much, here's the firework!"},
+     "exchange": "YAY, i've been starving for so long! Thanks so much, here's the firework!",
+     "after_exchange": "Thanks again for the food! \n"},
     {"type": "item",
      "requirement": "Food",
      "reward": "Firework"}
@@ -748,7 +762,7 @@ craftable_items = {"Makeshift Weapon": ["Scrap metal"],
 
 
 #PLAYER CLASS OBJECT
-player = Player(rooms["workshop"], rooms)
+player = Player(rooms["cafeteria"], rooms)
 
 
 #Escape prison texts
