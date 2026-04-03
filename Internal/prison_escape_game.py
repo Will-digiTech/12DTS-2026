@@ -1,3 +1,12 @@
+# This is my prison escape game. 
+# The player must navigate through the prison, talk to NPCs, complete shifts which include minigames, collect items, craft items, and use all these things to escape the prison.
+# There are three different escape routes.
+# The easiest route is to get the screwdriver from Derek in the cell and use it to escape through the vent in the bathroom, but you must also complete a mini-game in the vent to successfully escape.
+# The second route is to incapacitate a guard, steal their uniform and use it to walk out the front door
+# The third route is to climb the wall in the yard using a grappling hook, this is the most difficult route as you need to have both the rope and scrap metal to craft a grappling hook, and you also need to have a firework to distract the guards while you climb the wall.
+# You can get the rope from the workshop, the scrap metal from Joel in the workshop and the firework from Bob in the bathroom
+# Good luck escaping the prison!
+
 
 #LIBRARIES
 import random
@@ -9,6 +18,7 @@ import sys
 INSTRUCTIONS = "\nWelcome to PRISON ESCAPE \n" \
                 "Your goal is to escape the prison! \n" \
                 "There are three possible escape routes. Route 1 is the easiest, while Route 3 is the most difficult. \n" \
+                "Type 'restart' at any input prompt to restart the game. \n" \
                 "Do not press enter while text is being displayed. \n" \
                 "Good Luck!!! \n"
 
@@ -136,7 +146,7 @@ class Player:
         print("Would you like to pick an item up?")
 
         while True:
-            pick_item_choice = input("Yes/No \n> ").lower()
+            pick_item_choice = get_input("Yes/No \n> ").lower()
             print() #Add space for readability
 
             if pick_item_choice == "yes":
@@ -396,7 +406,7 @@ class Player:
         print("Craftable items: ")
         for item, materials in craftable_items.items():
             print(f"{item} --> {', '.join(materials)}")
-        input("\nPress enter to continue: ")
+        get_input("\nPress enter to continue: ")
         clear_screen()
 
 
@@ -429,7 +439,7 @@ class Player:
                 try:
                     print(f"{correct_food_counter}/5 completed \n")
                     print(anagram)
-                    guess = input("Guess the food \n>")
+                    guess = get_input("Guess the food \n>")
                     if guess.isdigit():
                         raise ValueError
                     else:
@@ -486,7 +496,7 @@ class Player:
             print(number_plate[::-1]) #Backwards number plate
             print("Correct number plate:")
             start = time.time()
-            user_input = input("> ")
+            user_input = get_input("> ")
             end = time.time()
             elapsed_time = round(end - start, 2)
 
@@ -522,7 +532,7 @@ class Player:
             return
 
         type_writer("You are trying to take someone's food without getting caught. \n" + "To successfully take someone's food you must press the enter button within a given time frame. \n" + "Don't press enter too early or too late to take the food.\n" + "Good luck! \n", ask_for_input=False)
-        input("Press enter to start\n")
+        get_input("Press enter to start\n")
 
         while True:
             countdown()
@@ -530,7 +540,7 @@ class Player:
             time_frame_max = time_frame_min + 2
 
             start = time.time()
-            stop_timer = input(f"Press enter between {time_frame_min} and {time_frame_max} seconds. \n>")
+            stop_timer = get_input(f"Press enter between {time_frame_min} and {time_frame_max} seconds. \n>")
             if stop_timer != "":
                 clear_screen()
                 print("Only press enter \n")
@@ -587,10 +597,10 @@ class Player:
         sequence = " ".join(randomised_sequence)
         print(sequence)
 
-        input("\nPress enter to type sequence")
+        get_input("\nPress enter to type sequence")
         clear_screen()
 
-        user_sequence = input("Enter sequence: \n").lower().strip()
+        user_sequence = get_input("Enter sequence: \n").lower().strip()
         if user_sequence == sequence:
             return True
         else:
@@ -629,7 +639,7 @@ class Player:
         type_writer(guard_disguise_text["Guard id check"], ask_for_input=False)
 
         try:
-            user_input = int(input("\nEnter guard ID number : "))
+            user_input = int(get_input("\nEnter guard ID number : "))
             if user_input == self.guard_id:
                 type_writer(guard_disguise_text["Correct Id"])
                 return True
@@ -662,7 +672,7 @@ class Player:
         else:
             print(f"{name} empty \n")
 
-        input("Press enter to continue\n")
+        get_input("Press enter to continue\n")
         clear_screen()
 
 
@@ -842,6 +852,18 @@ wall_climb_escape_text = {
 
 
 #FUNCTIONS
+def restart_game():
+    clear_screen()
+    print("Restarting game...\n")
+    time.sleep(0.5)
+    os.execl(sys.executable, sys.executable, os.path.abspath(__file__)) #Searched this line up to restart game with no bugs, if I don't use it I will have to manually reset everything back to default. E.g room items, npcs, etc.
+
+def get_input(prompt):
+    user_input = input(prompt)
+    if user_input.strip().lower() == "restart":
+        restart_game()
+    return user_input
+
 def countdown():
     clear_input_buffer()
     print("Starting in ...")
@@ -860,7 +882,7 @@ def indexed_loop(looped_list):
 def pick_from_choices(prompt, options):
     while True:
         try:
-            choice = int(input(prompt))
+            choice = int(get_input(prompt))
 
             if 1 <= choice <= len(options):
                 return options[choice - 1]
@@ -884,13 +906,13 @@ def game_over_won(ending):
 
 def restart_game_choice():
     while True:
-        choice = input("Do you want to restart the game? (Yes/No): ").lower()
+        choice = get_input("Do you want to restart the game? (Yes/No): ").lower()
         if choice == "yes":
-            main()
+            restart_game()
             break
         elif choice == "no":
             print("Thanks for playing!")
-            quit()
+            raise SystemExit
         else:
             print("Please enter 'Yes' or 'No'.")
 
@@ -911,6 +933,7 @@ def show_map(current_room):
             "        \\    / \n"
             f"         {y_name.upper() if current_room.name == y_name else y_name} \n"
     )
+    print(f"Player location: {player.player_location.name.upper()}\n")
 
 def clear_screen():
     if not sys.stdout.isatty():
@@ -952,7 +975,7 @@ def type_writer(text, delay=0.03, ask_for_input=True, clear_screen_at_start=True
     clear_input_buffer()
 
     if ask_for_input:
-        input("Press enter to continue \n") #Gives user time to read the text before clearing the screen
+        get_input("Press enter to continue \n") #Gives user time to read the text before clearing the screen
         clear_screen()
 
 def main():
@@ -960,7 +983,7 @@ def main():
     type_writer(INSTRUCTIONS) #Give user game instructions
     print("----Prison Map----")
     print(STARTING_MAP)
-    input("Press enter to start game \n")
+    get_input("Press enter to start game \n")
     clear_screen()
     
     player.action()
