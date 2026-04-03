@@ -35,16 +35,26 @@ CLIMB_WALL = "Attempt to climb wall"
 VENT_ESCAPE = "Climb through vent"
 CRAFT = "Craft an item"
 
+#Store item names in constants to avoid typo errors and readability issues
+ITEM_TOOTHBRUSH = "Toothbrush"
+ITEM_SCRAP_METAL = "Scrap metal"
+ITEM_SCREWDRIVER = "Screwdriver"
+ITEM_ROPE = "Rope"
+ITEM_FOOD = "Food"
+ITEM_MAKESHIFT_WEAPON = "Makeshift Weapon"
+ITEM_GRAPPLING_HOOK = "Grappling hook"
+ITEM_FIREWORK = "Firework"
+
 
 #CLASSES
 class Room:
-    def __init__(self, name, room_text, actions, items, exits, npcs=None, has_visited=False):
+    def __init__(self, name, room_text, actions, items, exits, npc=None, has_visited=False):
         self.name = name
         self.room_text = room_text #Room description and location text stored in a dictionary
         self.actions = actions #List of actions that the player can do in the room
         self.items = items #List of items in the room
         self.exits = exits #All exits from the room
-        self.npcs = npcs if npcs else [] #NPCs in the room (if any)
+        self.npc = npc #NPC in the room, if there is one
         self.has_visited = has_visited #Flag to check if player has already visited the room, used to display different text based on if they have been there before or not
 
     def show_description(self):
@@ -60,10 +70,10 @@ class Player:
     def __init__(self, player_location, all_rooms):
         self.rooms = all_rooms #Dictionary of all rooms in the game, used to update player location when moving rooms
 
-        self.inventory = [""] #Player inventory
+        self.inventory = [] #Player inventory
 
         self.player_location = player_location #Current room player is in
-        self.action_functions = { #Dictonary to link actions to their functions
+        self.action_functions = { #Dictionary linking each action to its function
             SHOW_INVENTORY: lambda: self.show_inventory(self.inventory, "Inventory", clear_screen_at_start=True), #Lambda function used to avoid function being called immediately
             CHECK: self.look_around,
             MOVE: self.move_room,
@@ -107,7 +117,7 @@ class Player:
     def look_around(self):
         clear_screen()
         if len(self.player_location.items) > 1: #If there are multiple items in the room
-            joined_items = ", ".join(self.player_location.items[:-1]) + ' and ' + self.player_location.items[-1] #Displays items found in Enlgish
+            joined_items = ", ".join(self.player_location.items[:-1]) + ' and ' + self.player_location.items[-1] #Displays items found in English
             type_writer(f"You see a {joined_items}\n")
 
             self.pick_up_item()
@@ -127,7 +137,7 @@ class Player:
 
         while True:
             pick_item_choice = input("Yes/No \n> ").lower()
-            print() #Add space for readibility
+            print() #Add space for readability
 
             if pick_item_choice == "yes":
 
@@ -144,7 +154,7 @@ class Player:
                 else:
                     options.append("Pick up all items") #Add option to pick up all items if there are multiple items in the room
 
-                indexed_loop(options) #Show options with an indesx number for user to choose from
+                indexed_loop(options) #Show options with an index number for the user to choose from
 
                 choice = pick_from_choices("\nChoose item to pick up: ", options)
                 
@@ -159,7 +169,7 @@ class Player:
                     self.show_inventory(self.inventory, "Inventory")
                     break
                     
-                else: #If user choses to pick up one specific item, add it to inventory
+                else: #If the user chooses one specific item, add it to the inventory
                     clear_screen()
                     try:
                         self.add_to_inventory(choice, self.player_location.items)
@@ -175,17 +185,20 @@ class Player:
                 print("Enter Yes or No")
                 continue
 
-    def add_to_inventory(self, item, remove_key, remove=True, player_inventory=True):
+    def has_inventory_space(self, slots_needed=1):
+        return len(self.inventory) + slots_needed <= self.max_inventory
+
+    def add_to_inventory(self, item, remove_key=None, remove=True, show_as_added=True):
         #Raises error if user tries to add item when inventory is already full.
-        if len(self.inventory) >= self.max_inventory:
+        if not self.has_inventory_space():
             raise ValueError(f"Inventory is full (max {self.max_inventory} items). Clear inventory by using items or hiding them under your bed.")
         
         self.inventory.append(item)
-        #Only removes item if remove=True. Used when player is picking items up from a room, it removes the item from the room. Dosn't remove item from craftable items.
+        #Only removes the item when remove=True. Used for room items, not crafted items.
         if remove:
             remove_key.remove(item)
 
-        if player_inventory: #Only prints added item if the item is being added to the player's inventory, not when player is taking items from bed inventory. Used to make text more clear for the user.
+        if show_as_added:
             print(f"+{item}")
         else:
             print(f"-{item}")
@@ -194,7 +207,7 @@ class Player:
     def move_room(self):
         clear_screen()
         print("----Prison Map----")
-        show_map()
+        show_map(self.player_location)
 
         options = self.player_location.exits + ["Stay in current room"] #Add option to stay in current room
 
@@ -210,13 +223,19 @@ class Player:
 
     def talk_to_prisoner(self):
         clear_screen()
-        dialogue = self.player_location.npcs.dialogue
-        already_spoken_to = self.player_location.npcs.already_spoken_to
-        has_given_reward = self.player_location.npcs.has_given_reward
+        npc = self.player_location.npc
 
-        requirement_type = self.player_location.npcs.exchange["type"]
-        requirement = self.player_location.npcs.exchange["requirement"]
-        reward = self.player_location.npcs.exchange["reward"]
+        if npc is None:
+            type_writer("There is no one here to talk to.")
+            return
+
+        dialogue = npc.dialogue
+        already_spoken_to = npc.already_spoken_to
+        has_given_reward = npc.has_given_reward
+
+        requirement_type = npc.exchange["type"]
+        requirement = npc.exchange["requirement"]
+        reward = npc.exchange["reward"]
 
         if has_given_reward:
             type_writer(dialogue["after_exchange"]) #Print dialogue for if user has already spoken to npc and completed exchange
@@ -226,23 +245,24 @@ class Player:
             #Check if user has required items NPC is requesting.
             if requirement_type == "money": #Check if npc wants money
                 if self.money >= requirement:
+                    if not self.has_inventory_space():
+                        type_writer("You have enough money, but your inventory is full. Hide or use an item before collecting the reward.")
+                        return
                     self.money -= requirement
-                    self.inventory.append(reward)
-                    self.player_location.npcs.has_given_reward = True #Set flag to true to show that npc has given reward
                     type_writer(dialogue["exchange"]) #Print dialogue for when you give npc required item
                     print(f"-${requirement}")
-                    print(f"+{reward} \n")
+                    self.add_to_inventory(reward, remove=False)
+                    npc.has_given_reward = True #Set flag to true to show that npc has given reward
                     self.show_inventory(self.inventory, "Inventory")
                     return
                 
             elif requirement_type == "item": #Check if npc wants an item
                 if requirement in self.inventory:
                     self.inventory.remove(requirement)
-                    self.inventory.append(reward)
-                    self.player_location.npcs.has_given_reward = True #Set flag to true to show that npc has given reward
                     type_writer(dialogue["exchange"]) #Print dialogue for when you give npc required item
                     print(f"-{requirement}")
-                    print(f"+{reward} ")
+                    self.add_to_inventory(reward, remove=False)
+                    npc.has_given_reward = True #Set flag to true to show that npc has given reward
                     self.show_inventory(self.inventory, "Inventory")
                     return
 
@@ -250,7 +270,7 @@ class Player:
             type_writer(dialogue["already_spoken"]) # Print dialogue for if user has already spoken to npc
         else:
             type_writer(dialogue["intro"]) # Print dialogue for npc opening script
-            self.player_location.npcs.already_spoken_to = True
+            npc.already_spoken_to = True
 
 
     def hide_item(self):
@@ -323,18 +343,16 @@ class Player:
     def craft(self):
         while True:
             clear_screen()
-            player_craftable_items = []
-
-            for item in craftable_items:
-                if self.check_craft_items(item):
-                    type_writer(f"You can craft a {item}")
-                    player_craftable_items.append(item)
+            player_craftable_items = [
+                item for item in craftable_items if self.check_craft_items(item)
+            ]
 
             if not player_craftable_items:
                 print("You can't craft anything \n")
                 self.show_craftable_items()
                 return
 
+            print(f"You can craft: {', '.join(player_craftable_items)}\n")
 
             options = player_craftable_items.copy()
             options.append("View craftable items") #Add option to view craftable items and their required materials
@@ -389,11 +407,11 @@ class Player:
 
         # MINI GAME to complete kitchen shift
         correct_food_counter = 0
-        num_of_lifes = 2 #Changable later if I want to give more lives
+        num_lives = 2 #Can be adjusted later to make the mini-game easier or harder
         anagram_foods = ["TOMATO", "CHEESE", "APPLE", "MILK", "POTATO", "BREAD"] #All possible foods for anagrams
 
         #Kitchen shift instructions
-        type_writer("You started your shift in the Kitchen.\n" + "You must solve these anagrams by typing the correct food.\n" + "You must get 5 correct to finish your shift.\n" + f"You have have {num_of_lifes} lives, if you fail you get kicked off your shift and earn no money.\n")
+        type_writer("You started your shift in the Kitchen.\n" + "You must solve these anagrams by typing the correct food.\n" + "You must get 5 correct to finish your shift.\n" + f"You have {num_lives} lives, if you fail you get kicked off your shift and earn no money.\n")
 
     
         while correct_food_counter < 5:
@@ -429,18 +447,18 @@ class Player:
                 
                 
             else:
-                num_of_lifes -= 1
+                num_lives -= 1
                 type_writer("You guessed incorrect!", ask_for_input=False)
-                if num_of_lifes == 0:
+                if num_lives == 0:
                     type_writer("You failed your shift!\n", clear_screen_at_start=False)
                     self.last_shift = KITCHEN_SHIFT #Update last shift to stop player doing same shift twice in a row
                     return
                 else:
-                    type_writer(f"You have used a life, you have {num_of_lifes} remaining.", clear_screen_at_start=False)
+                    type_writer(f"You have used a life, you have {num_lives} remaining.", clear_screen_at_start=False)
 
         self.money += 5
         self.last_shift = KITCHEN_SHIFT #Update last shift to stop player doing same shift twice in a row
-        type_writer("Congratulations you completed your shift and earnt 5 dollars", ask_for_input=False)
+        type_writer("Congratulations you completed your shift and earned 5 dollars", ask_for_input=False)
         type_writer(f"You now have ${self.money} in total", clear_screen_at_start=False)
 
     def workshop_shift(self):
@@ -449,15 +467,15 @@ class Player:
             return
 
         #MINI GAME to complete workshop shift
-        completed_num_plates = 0
-        num_of_lives = 3
+        completed_plates = 0
+        num_lives = 3
         allowed_time = 10
-        num_to_complete = 5
+        plates_to_complete = 5
 
-        print() #Add space for readibility
-        type_writer(f"You started your shift in the Workshop.\n" + "You will get given a number plate back to front and you must type it the correct way.\n" + "For example you might be given '321CBA' and you must type 'ABC123'.\n" + f"You have {allowed_time} seconds to type it or you fail your shift.\n" + f"Complete {num_to_complete} number plates to complete your shift.\n" + f"You have {num_of_lives} lives good luck!\n")
+        print() #Add space for readability
+        type_writer(f"You started your shift in the Workshop.\n" + "You will get given a number plate back to front and you must type it the correct way.\n" + "For example you might be given '321CBA' and you must type 'ABC123'.\n" + f"You have {allowed_time} seconds to type it or you fail your shift.\n" + f"Complete {plates_to_complete} number plates to complete your shift.\n" + f"You have {num_lives} lives good luck!\n")
 
-        while completed_num_plates < num_to_complete:
+        while completed_plates < plates_to_complete:
             countdown()
 
             number_plate_letters = "".join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ', k=3))
@@ -474,32 +492,36 @@ class Player:
 
             if elapsed_time < allowed_time:
                 if user_input.upper() == number_plate:
-                    completed_num_plates += 1
+                    completed_plates += 1
                     clear_screen()
                     print("You got it")
                     print(f"It took you {elapsed_time} seconds")
-                    print(f"Completed number plates : {completed_num_plates}/{num_to_complete} \n")
+                    print(f"Completed number plates : {completed_plates}/{plates_to_complete} \n")
                 else:
-                    num_of_lives -= 1
+                    num_lives -= 1
                     type_writer("You typed it out incorrectly", ask_for_input=False)
-                    type_writer(f"You have {num_of_lives} lives remaining \n", clear_screen_at_start=False)
+                    type_writer(f"You have {num_lives} lives remaining \n", clear_screen_at_start=False)
             else:
-                num_of_lives -= 1
-                type_writer("You ran out of time\n" + f"It took you {elapsed_time} seconds\n" + f"You have {num_of_lives} lives remaining \n")
+                num_lives -= 1
+                type_writer("You ran out of time\n" + f"It took you {elapsed_time} seconds\n" + f"You have {num_lives} lives remaining \n")
 
 
-            if num_of_lives == 0:
+            if num_lives == 0:
                 type_writer("You failed your shift! \n")
                 self.last_shift = WORKSHOP_SHIFT #Update last shift to stop player doing same shift twice in a row
                 return
             
         self.money += 5
         self.last_shift = WORKSHOP_SHIFT #Update last shift to stop player doing same shift twice in a row
-        type_writer("You successfully completed your shift and earnt 5 dollars!\n" + f"You now have ${self.money} in total \n")
+        type_writer("You successfully completed your shift and earned 5 dollars!\n" + f"You now have ${self.money} in total \n")
 
 
     def steal_food(self):
-        type_writer("You are trying to take someones food without getting caught. \n" + "To succesfully take someones food you must press the enter button within a given time frame. \n" + "Don't press enter too early or too late to take the food.\n" + "Good luck! \n", ask_for_input=False)
+        if not self.has_inventory_space():
+            type_writer("Your inventory is full. Hide or use an item before trying to steal food.")
+            return
+
+        type_writer("You are trying to take someone's food without getting caught. \n" + "To successfully take someone's food you must press the enter button within a given time frame. \n" + "Don't press enter too early or too late to take the food.\n" + "Good luck! \n", ask_for_input=False)
         input("Press enter to start\n")
 
         while True:
@@ -519,10 +541,8 @@ class Player:
             clear_screen()
             print(f"{elapsed_time} seconds")
             if time_frame_min <= elapsed_time <= time_frame_max:
-                self.add_to_inventory("Food", None, remove=False)
-                # self.inventory.append("Food")
-                type_writer("You succesfully stole food!", clear_screen_at_start=False)
-                # print("+Food")
+                self.add_to_inventory(ITEM_FOOD, remove=False)
+                type_writer("You successfully stole food!", clear_screen_at_start=False)
                 self.show_inventory(self.inventory, "Inventory")
 
                 return
@@ -533,7 +553,7 @@ class Player:
 
     def vent_escape(self):
  
-        if "Screwdriver" in self.inventory:
+        if ITEM_SCREWDRIVER in self.inventory:
             type_writer(vent_escape_text["Correct item"]["True"])
         else:
             type_writer(vent_escape_text["Correct item"]["False"])
@@ -559,9 +579,9 @@ class Player:
         length_of_sequence = self.length_of_vent_sequence
         randomised_sequence = []
 
-        type_writer(vent_escape_text["Mini game instructions"].format(length_of_sequence=player.length_of_vent_sequence))
+        type_writer(vent_escape_text["Mini game instructions"].format(length_of_sequence=self.length_of_vent_sequence))
 
-        print("Remeber the sequence: ")
+        print("Remember the sequence: ")
         for i in range(length_of_sequence):
             randomised_sequence.append(random.choice(directions))
         sequence = " ".join(randomised_sequence)
@@ -580,7 +600,7 @@ class Player:
 
     def knock_out_guard(self):
         #Chance of escaping without a makeshift weapon (1% success rate)
-        if "Makeshift weapon" not in self.inventory:
+        if ITEM_MAKESHIFT_WEAPON not in self.inventory:
             if random.random() > 0.01:
                 type_writer(guard_disguise_text["Attack guard no weapon text"]["Unsuccessful"])
                 game_over_lost()
@@ -590,16 +610,14 @@ class Player:
         else:
             type_writer(guard_disguise_text["Attack guard text"])
 
-        #Chance of taking guards clothes wihtout getting caught (70% success rate)
+        #Chance of taking the guard's clothes without getting caught (70% success rate)
         if random.random() > 0.3:
             type_writer(guard_disguise_text["Take uniform"]["success"])
         else:
             type_writer(guard_disguise_text["Take uniform"]["fail"])
             game_over_lost()
 
-        type_writer(guard_disguise_text["In uniform text"].format(guard_id=player.guard_id))
-        # print(guard_disguise_text["In uniform text"].format(guard_id=player.guard_id))
-        # input("Press enter to continue")
+        type_writer(guard_disguise_text["In uniform text"].format(guard_id=self.guard_id))
 
         if self.id_check():
             game_over_won(2)
@@ -620,12 +638,13 @@ class Player:
                 return False
         except ValueError:
             type_writer(guard_disguise_text["Incorrect Id"])
+            return False
 
 
     def climb_wall(self):
-        if "Grappling hook" not in self.inventory:
+        if ITEM_GRAPPLING_HOOK not in self.inventory:
             type_writer(wall_climb_escape_text["No grappling hook text"])
-        elif "Firework" not in self.inventory:
+        elif ITEM_FIREWORK not in self.inventory:
             type_writer(wall_climb_escape_text["No firework text"])
         else:
             clear_screen()
@@ -668,7 +687,7 @@ Derek_NPC = NPC(
 
     {"type": "money",
      "requirement": 10,
-     "reward": "Screwdriver"}
+     "reward": ITEM_SCREWDRIVER}
 )
 
 Joel_NPC = NPC(
@@ -678,8 +697,8 @@ Joel_NPC = NPC(
      "exchange": "Thanks man! Here's the scrap metal. \n",
      "after_exchange": "Pleasure doing business with you! \n"},
     {"type": "item",
-     "requirement": "Toothbrush",
-     "reward": "Scrap metal"}
+     "requirement": ITEM_TOOTHBRUSH,
+     "reward": ITEM_SCRAP_METAL}
 )
 
 Bob_NPC = NPC(
@@ -689,8 +708,8 @@ Bob_NPC = NPC(
      "exchange": "YAY, i've been starving for so long! Thanks so much, here's the firework!",
      "after_exchange": "Thanks again for the food! \n"},
     {"type": "item",
-     "requirement": "Food",
-     "reward": "Firework"}
+     "requirement": ITEM_FOOD,
+     "reward": ITEM_FIREWORK}
 )
 
 #ROOM CLASS OBJECTS
@@ -703,7 +722,7 @@ cell = Room(
     [SHOW_INVENTORY, CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED], #Actions
     [], #Items
     ["WORKSHOP", "BATHROOM", "CAFETERIA"], #Exits
-    npcs=Derek_NPC
+    npc=Derek_NPC
 )
 
 cafeteria = Room(
@@ -746,9 +765,9 @@ bathroom = Room(
         "description": "It's got 5 cubicles all with broken doors. A strange prisoner is sitting in the corner, muttering to himself. There is also a vent above one of the cubicles. \n"
     },
     [SHOW_INVENTORY, CHECK, MOVE, TALK, VENT_ESCAPE], #Actions
-    ["Toothbrush"], #Items
+    [ITEM_TOOTHBRUSH], #Items
     ["CELL", "WORKSHOP"], #Exits
-    npcs=Bob_NPC
+    npc=Bob_NPC
 )
 
 workshop = Room(
@@ -758,9 +777,9 @@ workshop = Room(
         "description": "It's a small room that offers a shift for money and a place to craft items. There is also another prisoner who spends all his time here. \n"
     },
     [SHOW_INVENTORY, CHECK, MOVE, TALK, WORKSHOP_SHIFT, CRAFT], #Actions
-    ["Rope"], #Items
+    [ITEM_ROPE], #Items
     ["CELL", "BATHROOM"], #Exits
-    npcs=Joel_NPC
+    npc=Joel_NPC
 )
 
 rooms = {
@@ -774,8 +793,10 @@ rooms = {
 
 
 #Crafting
-craftable_items = {"Makeshift weapon": ["Scrap metal", "Screwdriver"],
-                   "Grappling hook": ["Rope", "Scrap metal"]}
+craftable_items = {
+    ITEM_MAKESHIFT_WEAPON: [ITEM_SCRAP_METAL, ITEM_SCREWDRIVER],
+    ITEM_GRAPPLING_HOOK: [ITEM_ROPE, ITEM_SCRAP_METAL]
+}
 
 
 #PLAYER CLASS OBJECT
@@ -786,7 +807,7 @@ player = Player(rooms["CELL"], rooms)
 vent_escape_text = {
     "Correct item": {"True": "You use your screwdriver to open the vent and climb through.", 
                     "False": "You need a screwdriver to open the vent."},
-    "Mini game instructions": "You are crawing through the vent, to make sure you don't get lost you must type the correct sequence of directions. \nYou will be given a sequence of {length_of_sequence} directions either left or right, for example 'left, right, left, left, right'. You must type the sequence correctly to make it through the vent. \nTo type the sequence correctly seperate directions with a space, e.g 'left right left' \nGood luck! \n",
+    "Mini game instructions": "You are crawling through the vent, and to make sure you don't get lost you must type the correct sequence of directions. \nYou will be given a sequence of {length_of_sequence} directions, either left or right, for example 'left, right, left, left, right'. You must type the sequence correctly to make it through the vent. \nTo type the sequence correctly, separate directions with a space, e.g. 'left right left' \nGood luck! \n",
     "Mini game result": {"True": "You successfully crawl the correct way and make your way to the guards office. You check the coast is clear and jump in.", 
                          "False": "You get lost in the vents. Eventually, the guards notice an open vent and find you."},
     "Final escape text": "You jump into the guards office and quickly hide. A guard walks in and you jump attack him, knocking him out. You take the guards uniform and his keycard. His ID number is {guard_id}. All you have to do is walk out the front door."
@@ -795,12 +816,12 @@ vent_escape_text = {
 
 guard_disguise_text = {
     "Attack guard no weapon text": {
-        "Successful": "You succesfully beat the guard with no makeshift weapon.",
+        "Successful": "You successfully beat the guard with no makeshift weapon.",
         "Unsuccessful": "You tried to sneak attack the guard without a makeshift weapon, he beats you up."
     },
     "Attack guard text": "You use your makeshift weapon to incapacitate the guard.",
     "Take uniform": {
-        "success": "You successfully take the guards uniform without anyone catching you.",
+        "success": "You successfully take the guard's uniform without anyone catching you.",
         "fail": "You attempt to take the guards uniform but someone catches you."
     },
     "In uniform text": "You have the guards keycard and his ID number is {guard_id}. All you have to do is walk out the front door.",
@@ -812,7 +833,7 @@ guard_disguise_text = {
 
 wall_climb_escape_text = {
     "Win text": "You go over to the East side of the prison and carefully set up the firework behind a bush. You light the firework and swiftly walk away. The firework goes off, exploding above the prison. You set up the firework a little too close to the bush and the bush catches on fire. As everyone is focused on the commotion of the fire, you make your way over to the West side. You grab your grappling hook and climb the wall. ",
-    "No grappling hook text": "You need a grapping hook to climb the walls, this can be crafted by using scrap metal and rope.",
+    "No grappling hook text": "You need a grappling hook to climb the walls, this can be crafted by using scrap metal and rope.",
     "No firework text": "There are too many guards around, you need a distraction. Find a firework to create a distraction."
 }
 
@@ -851,15 +872,29 @@ def pick_from_choices(prompt, options):
             print("Please input a valid number")
 
 def game_over_lost():
+    print("You failed to escape the prison.")
     print("Game over!")
-    quit()
+    restart_game_choice()
+    
 
 def game_over_won(ending):
     print("Congratulations! You successfully escaped the prison.")
     print(f"Ending {ending}/3")
-    quit()
+    restart_game_choice()
 
-def show_map():
+def restart_game_choice():
+    while True:
+        choice = input("Do you want to restart the game? (Yes/No): ").lower()
+        if choice == "yes":
+            main()
+            break
+        elif choice == "no":
+            print("Thanks for playing!")
+            quit()
+        else:
+            print("Please enter 'Yes' or 'No'.")
+
+def show_map(current_room):
     #Creating strings for the locations on the map which are mutable. The room you are in shows as ALL CAPS.
     w_name = workshop.name
     cell_name = cell.name
@@ -868,16 +903,19 @@ def show_map():
     k_name = kitchen.name
     y_name = yard.name
 
-    print(  f'{w_name.upper() if player.player_location.name == w_name else w_name} \n'
+    print(  f'{w_name.upper() if current_room.name == w_name else w_name} \n'
             "|       \\ \n"
-            f"{cell_name.upper() if player.player_location.name == cell_name else cell_name} --- {b_name.upper() if player.player_location.name == b_name else b_name} \n"
+            f"{cell_name.upper() if current_room.name == cell_name else cell_name} --- {b_name.upper() if current_room.name == b_name else b_name} \n"
             "| \n"
-            f"{cafeteria_name.upper() if player.player_location.name == cafeteria_name else cafeteria_name} --- {k_name.upper() if player.player_location.name == k_name else k_name} \n"
+            f"{cafeteria_name.upper() if current_room.name == cafeteria_name else cafeteria_name} --- {k_name.upper() if current_room.name == k_name else k_name} \n"
             "        \\    / \n"
-            f"         {y_name.upper() if player.player_location.name == y_name else y_name} \n"
+            f"         {y_name.upper() if current_room.name == y_name else y_name} \n"
     )
 
 def clear_screen():
+    if not sys.stdout.isatty():
+        return
+
     # Check the operating system name
     if os.name == 'nt':
         # Command for Windows
@@ -886,15 +924,19 @@ def clear_screen():
         # Command for Linux, Mac, and other systems
         _ = os.system('clear')
 
-##Searhed this up online to clear the input from the user while text is on the screen. Game would break if user inputs something when they are not supposed to##
+##Searched this up online to clear the input from the user while text is on the screen. The game would break if the user inputs something when they are not supposed to.##
 if os.name == 'nt':
     import msvcrt
     def clear_input_buffer():
+        if not sys.stdin.isatty():
+            return
         while msvcrt.kbhit():
             msvcrt.getch()
 else:
     import termios
     def clear_input_buffer():
+        if not sys.stdin.isatty():
+            return
         termios.tcflush(sys.stdin, termios.TCIFLUSH)
 
 
@@ -913,15 +955,16 @@ def type_writer(text, delay=0.03, ask_for_input=True, clear_screen_at_start=True
         input("Press enter to continue \n") #Gives user time to read the text before clearing the screen
         clear_screen()
 
-
-#----Game Loop----
-clear_screen()
-type_writer(INSTRUCTIONS) #Give user game instructions
-print("----Prison Map----")
-print(STARTING_MAP)
-input("Press enter to start game \n")
-clear_screen()
-
-while True:
+def main():
+    clear_screen()
+    type_writer(INSTRUCTIONS) #Give user game instructions
+    print("----Prison Map----")
+    print(STARTING_MAP)
+    input("Press enter to start game \n")
+    clear_screen()
+    
     player.action()
 
+
+if __name__ == "__main__":
+    main()
