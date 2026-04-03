@@ -1,10 +1,3 @@
-#Prison Escape Game
-#Start in cell
-#Can go to: Cafeteria, Yard, Laundry, Kitchen(Shift for money)
-#Inventory starts empty
-#Items are randomly scattered around rooms
-#Hold a maximum of 3 items, hide item under bed to get rid of item or use it
-#Rooms that you can only get to with specific items, such as vents with a screwdriver
 
 #LIBRARIES
 import random
@@ -12,12 +5,12 @@ import os
 import time
 import sys
 
-#VARIABLES
-INSTRUCTIONS = ""#\nWelcome to PRISON ESCAPE \n" \
-               # "Your goal is to escape the prison! \n" \
-                #"There are three possible escape routes. Route 1 is the easiest, while Route 3 is the most difficult. \n" \
-               # "Do not press enter while text is being displayed. \n" \
-                #"Good Luck!!! \n"
+#CONSTANT VARIABLES
+INSTRUCTIONS = "\nWelcome to PRISON ESCAPE \n" \
+                "Your goal is to escape the prison! \n" \
+                "There are three possible escape routes. Route 1 is the easiest, while Route 3 is the most difficult. \n" \
+                "Do not press enter while text is being displayed. \n" \
+                "Good Luck!!! \n"
 
 STARTING_MAP = "Workshop \n" \
         "|       \\ \n" \
@@ -28,6 +21,7 @@ STARTING_MAP = "Workshop \n" \
         f"         yard \n"
 
 #Constant variables for players actions
+SHOW_INVENTORY = "Check inventory"
 CHECK = "Check room for items"
 MOVE = "Move room"
 TALK = "Talk to prisoner"
@@ -41,23 +35,20 @@ CLIMB_WALL = "Attempt to climb wall"
 VENT_ESCAPE = "Climb through vent"
 CRAFT = "Craft an item"
 
-MESSAGE_LENGTHS = 3
-LONGER_MESSAGE_LENGTHS = 5
-
 
 #CLASSES
 class Room:
     def __init__(self, name, room_text, actions, items, exits, npcs=None, has_visited=False):
         self.name = name
-        self.room_text = room_text
-        self.actions = actions
-        self.items = items
-        self.exits = exits
-        self.npcs = npcs if npcs else []
-        self.has_visited = has_visited
+        self.room_text = room_text #Room description and location text stored in a dictionary
+        self.actions = actions #List of actions that the player can do in the room
+        self.items = items #List of items in the room
+        self.exits = exits #All exits from the room
+        self.npcs = npcs if npcs else [] #NPCs in the room (if any)
+        self.has_visited = has_visited #Flag to check if player has already visited the room, used to display different text based on if they have been there before or not
 
     def show_description(self):
-        # clear_screen()
+        #Check if player has already visited the room, if not show location and description text, if they have show location text only
         if not self.has_visited:
             type_writer(self.room_text["location"] + "\n" + self.room_text["description"])
             self.has_visited = True
@@ -67,10 +58,13 @@ class Room:
 
 class Player:
     def __init__(self, player_location, all_rooms):
-        self.rooms = all_rooms
+        self.rooms = all_rooms #Dictionary of all rooms in the game, used to update player location when moving rooms
 
-        self.player_location = player_location
-        self.action_functions = {
+        self.inventory = ["Rope", "Scrap metal"] #Player inventory
+
+        self.player_location = player_location #Current room player is in
+        self.action_functions = { #Dictonary to link actions to their functions
+            SHOW_INVENTORY: lambda: self.show_inventory(self.inventory, "Inventory", clear_screen_at_start=True), #Lambda function used to avoid function being called immediately
             CHECK: self.look_around,
             MOVE: self.move_room,
             TALK: self.talk_to_prisoner,
@@ -85,10 +79,10 @@ class Player:
             CRAFT: self.craft
         }
 
-        self.inventory = []
-        self.max_inventory = 3
-        self.bed_inventory = []
-        self.money = 5
+        
+        self.max_inventory = 3 #Maximum number of items allowed in player inventory
+        self.bed_inventory = [] #Inventory for items stored under bed
+        self.money = 0 #Player starting money
         self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
         self.length_of_vent_sequence = 5 #Length of direction sequence in vent mini-game, can be changed to make mini-game easier or harder
@@ -96,6 +90,8 @@ class Player:
 
 
     def action(self):
+        #MAIN GAME LOOP FUNCTION
+        #Gives the player possible actions based on the room they are in
         while True:
             self.player_location.show_description()
         
@@ -110,17 +106,17 @@ class Player:
 
     def look_around(self):
         clear_screen()
-        if len(self.player_location.items) > 1:
+        if len(self.player_location.items) > 1: #If there are multiple items in the room
             joined_items = ", ".join(self.player_location.items[:-1]) + ' and ' + self.player_location.items[-1] #Displays items found in Enlgish
             type_writer(f"You see a {joined_items}\n")
 
             self.pick_up_item()
 
-        elif self.player_location.items:
+        elif self.player_location.items: #If there is one item in the room
             type_writer(f"You see a {self.player_location.items[0]}\n", ask_for_input=False)
 
             self.pick_up_item()
-        else:
+        else: #No items in the room
             type_writer("You don't find anything")
 
         print() #Add space for readability
@@ -135,17 +131,17 @@ class Player:
 
             if pick_item_choice == "yes":
 
-                options = self.player_location.items.copy()
+                options = self.player_location.items.copy() #Copy list of items in the room to manipulate without changing original list
 
-                if len(options) == 1:
+                if len(options) == 1: #If there is only one item in the room, automatically pick it up
                     item = options[0]
                     self.add_to_inventory(item, self.player_location.items)
                     self.show_inventory(self.inventory, "Inventory")
                     break
                 else:
-                    options.append("Pick up all items")
+                    options.append("Pick up all items") #Add option to pick up all items if there are multiple items in the room
 
-                indexed_loop(options)
+                indexed_loop(options) #Show options with an indesx number for user to choose from
 
                 choice = pick_from_choices("\nChoose item to pick up: ", options)
                 
@@ -154,18 +150,18 @@ class Player:
                     for item in self.player_location.items[:]:
                         try:
                             self.add_to_inventory(item, self.player_location.items)
-                        except ValueError as e:
+                        except ValueError as e: #If inventory is full, stop adding items and show error message
                             print(f"\n{e}\n")
 
                     self.show_inventory(self.inventory, "Inventory")
                     break
                     
-                else:
+                else: #If user choses to pick up one specific item, add it to inventory
                     clear_screen()
                     try:
                         self.add_to_inventory(choice, self.player_location.items)
-                    except ValueError as e:
-                        print(e)
+                    except ValueError as e: #If inventory is full, stop adding item and show error message
+                        print(f"\n{e}\n")
 
                 
                 self.show_inventory(self.inventory, "Inventory")
@@ -177,14 +173,16 @@ class Player:
                 continue
 
     def add_to_inventory(self, item, remove_key, remove=True, player_inventory=True):
+        #Raises error if user tries to add item when inventory is already full.
         if len(self.inventory) >= self.max_inventory:
             raise ValueError(f"Inventory is full (max {self.max_inventory} items). Clear inventory by using items or hiding them under your bed.")
         
         self.inventory.append(item)
+        #Only removes item if remove=True. Used when player is picking items up from a room, it removes the item from the room. Dosn't remove item from craftable items.
         if remove:
             remove_key.remove(item)
 
-        if player_inventory:
+        if player_inventory: #Only prints added item if the item is being added to the player's inventory, not when player is taking items from bed inventory. Used to make text more clear for the user.
             print(f"+{item}")
         else:
             print(f"-{item}")
@@ -195,14 +193,14 @@ class Player:
         print("----Prison Map----")
         show_map()
 
-        options = self.player_location.exits + ["Stay in current room"]
+        options = self.player_location.exits + ["Stay in current room"] #Add option to stay in current room
 
         indexed_loop(options)
 
         chosen_room = pick_from_choices("Choose a room to go to: ", options)
 
         if chosen_room != "Stay in current room":
-            self.player_location = self.rooms[chosen_room] #Update player location
+            self.player_location = self.rooms[chosen_room] #Change player location to chosen room
 
         clear_screen()
 
@@ -320,55 +318,65 @@ class Player:
 
 
     def craft(self):
-        clear_screen()
-        player_craftable_items = []
-
-        for item in craftable_items:
-            if self.check_craft_items(item):
-                type_writer(f"You can craft a {item}")
-                player_craftable_items.append(item)
-
-        if not player_craftable_items:
+        while True:
             clear_screen()
-            print("You can't craft anything\n")
-            print("Craftable items: ")
-            for item, materials in craftable_items.items():
-                print(f"{item} --> {', '.join(materials)}")
-            input("Press enter to continue: ")
-            return
+            player_craftable_items = []
 
-        if len(player_craftable_items) == 1:
-            chosen_item = player_craftable_items[0]
+            for item in craftable_items:
+                if self.check_craft_items(item):
+                    type_writer(f"You can craft a {item}")
+                    player_craftable_items.append(item)
 
-            
-        else:
-            indexed_loop(player_craftable_items)
-            chosen_item = pick_from_choices("Pick item to craft: ", player_craftable_items)
-
-        materials = craftable_items[chosen_item]
-
-        #Remove the required material from player's inventory
-        for material in materials:
-            if material in self.inventory: #Backup line to protect accidental error
-                self.inventory.remove(material)
-
-        try:
-            self.add_to_inventory(chosen_item, None, remove=False)
-            self.show_inventory(self.inventory, "Player Inventory")
-            
-        except ValueError as e:
-            print(f"\n{e}\n")
+            if not player_craftable_items:
+                print("You can't craft anything \n")
+                self.show_craftable_items()
+                return
 
 
+            options = player_craftable_items.copy()
+            options.append("View craftable items") #Add option to view craftable items and their required materials
+            options.append("Don't craft anything") #Give player option to not craft anything
 
+            indexed_loop(options)
+            chosen_item = pick_from_choices("\nPick item to craft: ", options)
 
-        #ADD CODE FOR GIVING PLAYER ITEM AND REMOVING USED ITEMS
+            if chosen_item == "View craftable items":
+                clear_screen()
+                self.show_craftable_items()
+                continue
+
+            if chosen_item == "Don't craft anything":
+                return
+
+            materials = craftable_items[chosen_item]
+
+            #Remove the required material from player's inventory
+            for material in materials:
+                if material in self.inventory: #Backup line to protect accidental error
+                    self.inventory.remove(material)
+
+            try:
+                clear_screen()
+                self.add_to_inventory(chosen_item, None, remove=False)
+                self.show_inventory(self.inventory, "Player Inventory")
+                return
+                
+            except ValueError as e:
+                print(f"\n{e}\n")
+
 
     def check_craft_items(self, item):
         for required_item in craftable_items[item]:
             if required_item not in self.inventory:
                 return False
         return True
+
+    def show_craftable_items(self):
+        print("Craftable items: ")
+        for item, materials in craftable_items.items():
+            print(f"{item} --> {', '.join(materials)}")
+        input("\nPress enter to continue: ")
+        clear_screen()
 
 
     def kitchen_shift(self):
@@ -439,8 +447,8 @@ class Player:
 
         #MINI GAME to complete workshop shift
         completed_num_plates = 0
-        num_of_lives = 2
-        allowed_time = 7
+        num_of_lives = 3
+        allowed_time = 10
         num_to_complete = 5
 
         print() #Add space for readibility
@@ -544,7 +552,7 @@ class Player:
 
     def vent_mini_game(self):
         directions = ["left", "right"]
-        length_of_sequence = 5
+        length_of_sequence = self.length_of_vent_sequence
         randomised_sequence = []
 
         type_writer(vent_escape_text["Mini game instructions"].format(length_of_sequence=player.length_of_vent_sequence))
@@ -619,7 +627,10 @@ class Player:
 
 
 
-    def show_inventory(self, inventory, name):
+    def show_inventory(self, inventory, name, clear_screen_at_start=False):
+        if clear_screen_at_start:
+            clear_screen()
+
         if inventory:
             print(f"{name}: {', '.join(inventory)} \n")
         else:
@@ -679,90 +690,89 @@ Bob_NPC = NPC(
 cell = Room(
     "cell",
     {
-        "location": "You are in your Cell",
+        "location": "You are in your CELL",
         "description": "It's a small, dimly lit room with two hard beds and a window. You have a cellmate, you don't talk often. \n"
     },
-    [CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED], #Actions
-    ["Rope"], #Items
-    ["workshop", "bathroom", "cafeteria"], #Exits
+    [SHOW_INVENTORY, CHECK, MOVE, TALK, HIDE_ITEM, GET_ITEM_BED], #Actions
+    [], #Items
+    ["WORKSHOP", "BATHROOM", "CAFETERIA"], #Exits
     npcs=Derek_NPC
 )
 
 cafeteria = Room(
     "cafeteria",
     {
-        "location": "You are in the Cafeteria",
+        "location": "You are in the CAFETERIA",
         "description": "It's a loud place with lots of prisoners. The food is terrible and the service is even worse. \n"
     },
-    [CHECK, MOVE, STEAL_FOOD], #Actions
+    [SHOW_INVENTORY, CHECK, MOVE, STEAL_FOOD], #Actions
     [], #Items
-    ["cell", "yard", "kitchen"] #Exits
+    ["CELL", "YARD", "KITCHEN"] #Exits
 )
 
 yard = Room(
     "yard",
     {
-        "location": "You are in the Yard",
+        "location": "You are in the YARD",
         "description": "It's a long area that stretches from the West to East side of the prison. The walls look climbable with the right tools. \n"
     },
-    [CHECK, MOVE, CLIMB_WALL], #Actions
+    [SHOW_INVENTORY, CHECK, MOVE, CLIMB_WALL], #Actions
     [], #Items
-    ["cafeteria", "kitchen"] #Exits
+    ["CAFETERIA", "KITCHEN"] #Exits
 )
 
 kitchen = Room(
     "kitchen",
     {
-        "location": "You are in the Kitchen",
+        "location": "You are in the KITCHEN",
         "description": "It's a dirty room where prisoners can do shifts to earn money. There is also a guard stationed here. \n"
     },
-    [CHECK, MOVE, KITCHEN_SHIFT, TAKE_GUARD_UNIFROM], #Actions
+    [SHOW_INVENTORY, CHECK, MOVE, KITCHEN_SHIFT, TAKE_GUARD_UNIFROM], #Actions
     [], #Items
-    ["cafeteria", "yard"] #Exits
+    ["CAFETERIA", "YARD"] #Exits
 )
 
 bathroom = Room(
     "bathroom",
     {
-        "location": "You are in the Bathroom",
+        "location": "You are in the BATHROOM",
         "description": "It's got 5 cubicles all with broken doors. A strange prisoner is sitting in the corner, muttering to himself. There is also a vent above one of the cubicles. \n"
     },
-    [CHECK, MOVE, TALK, VENT_ESCAPE], #Actions
+    [SHOW_INVENTORY, CHECK, MOVE, TALK, VENT_ESCAPE], #Actions
     ["Toothbrush"], #Items
-    ["cell", "workshop"], #Exits
+    ["CELL", "WORKSHOP"], #Exits
     npcs=Bob_NPC
 )
 
 workshop = Room(
     "workshop",
     {
-        "location": "",#You are in the Workshop",
-        "description": "",#It's a small room that offers a shift for money and a place to craft items. There is also another prisoner who spends all his time here. \n"
+        "location": "You are in the WORKSHOP",
+        "description": "It's a small room that offers a shift for money and a place to craft items. There is also another prisoner who spends all his time here. \n"
     },
-    [CHECK, MOVE, TALK, WORKSHOP_SHIFT, CRAFT], #Actions
-    [], #Items
-    ["cell", "bathroom"], #Exits
+    [SHOW_INVENTORY, CHECK, MOVE, TALK, WORKSHOP_SHIFT, CRAFT], #Actions
+    ["Rope"], #Items
+    ["CELL", "BATHROOM"], #Exits
     npcs=Joel_NPC
 )
 
 rooms = {
-    "cell": cell,
-    "cafeteria": cafeteria,
-    "yard": yard,
-    "kitchen": kitchen,
-    "bathroom": bathroom,
-    "workshop": workshop
+    "CELL": cell,
+    "CAFETERIA": cafeteria,
+    "YARD": yard,
+    "KITCHEN": kitchen,
+    "BATHROOM": bathroom,
+    "WORKSHOP": workshop
 }
 
 
 #Crafting
-craftable_items = {"Makeshift Weapon": ["Scrap metal"],
-                   "Grappling hook": ["Rope", "Scrap metal"],
-                   "Lockpick": ["Screwdriver", "Scrap metal"]}
+craftable_items = {"Makeshift Weapon": ["Scrap metal", "Screwdriver"],
+                   "Grappling hook": ["Rope", "Scrap metal"]}
 
 
 #PLAYER CLASS OBJECT
-player = Player(rooms["cafeteria"], rooms)
+player = Player(rooms["WORKSHOP"], rooms)
 
 
 #Escape prison texts
@@ -817,7 +827,7 @@ def countdown():
 
 def indexed_loop(looped_list):
     for index, value in enumerate(looped_list):
-        print(f"{index + 1}: {value.capitalize()}")
+        print(f"{index + 1}: {value}")
 
 def pick_from_choices(prompt, options):
     while True:
@@ -832,12 +842,6 @@ def pick_from_choices(prompt, options):
 
         except ValueError:
             print("Please input a valid number")
-
-def display_a_message(message, seconds):
-    clear_screen()
-    print(message)
-    time.sleep(seconds)
-    clear_screen()
 
 def game_over_lost():
     print("Game over!")
