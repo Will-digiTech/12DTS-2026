@@ -19,7 +19,6 @@ INSTRUCTIONS = "\nWelcome to PRISON ESCAPE \n" \
                 "Your goal is to escape the prison! \n" \
                 "There are three possible escape routes. Route 1 is the easiest, while Route 3 is the most difficult. \n" \
                 "Type 'restart' at any input prompt to restart the game. \n" \
-                "Do not press enter while text is being displayed. \n" \
                 "Good Luck!!! \n"
 
 STARTING_MAP = "Workshop \n" \
@@ -45,7 +44,7 @@ CLIMB_WALL = "Attempt to climb wall"
 VENT_ESCAPE = "Climb through vent"
 CRAFT = "Craft an item"
 
-#Store item names in constants to avoid typo errors and readability issues
+#Store item names in constants to avoid typo errors and make more readable. Also makes it easy to add more items later.
 ITEM_TOOTHBRUSH = "Toothbrush"
 ITEM_SCRAP_METAL = "Scrap metal"
 ITEM_SCREWDRIVER = "Screwdriver"
@@ -105,6 +104,7 @@ class Player:
         self.money = 0 #Player starting money
         self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
+        #Stored as a variable instead of hard coded into the mini-game so the difficulty can be changed easily later.
         self.length_of_vent_sequence = 5 #Length of direction sequence in vent mini-game, can be changed to make mini-game easier or harder
         self.guard_id = random.randint(10000, 99999) #Random guard ID number for final escape
 
@@ -196,6 +196,7 @@ class Player:
                 continue
 
     def has_inventory_space(self, slots_needed=1):
+        #Using the inventory limit through one function avoids hard coding checks in multiple places.
         return len(self.inventory) + slots_needed <= self.max_inventory
 
     def add_to_inventory(self, item, remove_key=None, remove=True, show_as_added=True):
@@ -417,6 +418,7 @@ class Player:
 
         # MINI GAME to complete kitchen shift
         correct_food_counter = 0
+        #These values are stored in variables instead of being hard coded
         num_lives = 2 #Can be adjusted later to make the mini-game easier or harder
         anagram_foods = ["TOMATO", "CHEESE", "APPLE", "MILK", "POTATO", "BREAD"] #All possible foods for anagrams
 
@@ -478,6 +480,7 @@ class Player:
 
         #MINI GAME to complete workshop shift
         completed_plates = 0
+        #Using variables for these settings makes the workshop mini-game easier to rebalance and expand if needed.
         num_lives = 3
         allowed_time = 10
         plates_to_complete = 5
@@ -803,6 +806,7 @@ rooms = {
 
 
 #Crafting
+#Recipes are stored in a dictionary so more craftable items can be added later without changing the crafting code.
 craftable_items = {
     ITEM_MAKESHIFT_WEAPON: [ITEM_SCRAP_METAL, ITEM_SCREWDRIVER],
     ITEM_GRAPPLING_HOOK: [ITEM_ROPE, ITEM_SCRAP_METAL]
