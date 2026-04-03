@@ -60,7 +60,7 @@ class Player:
     def __init__(self, player_location, all_rooms):
         self.rooms = all_rooms #Dictionary of all rooms in the game, used to update player location when moving rooms
 
-        self.inventory = ["Makeshift weapon"] #Player inventory
+        self.inventory = [""] #Player inventory
 
         self.player_location = player_location #Current room player is in
         self.action_functions = { #Dictonary to link actions to their functions
@@ -135,7 +135,10 @@ class Player:
 
                 if len(options) == 1: #If there is only one item in the room, automatically pick it up
                     item = options[0]
-                    self.add_to_inventory(item, self.player_location.items)
+                    try:
+                        self.add_to_inventory(item, self.player_location.items)
+                    except ValueError as e:
+                        print(f"\n{e}\n")
                     self.show_inventory(self.inventory, "Inventory")
                     break
                 else:
@@ -516,9 +519,10 @@ class Player:
             clear_screen()
             print(f"{elapsed_time} seconds")
             if time_frame_min <= elapsed_time <= time_frame_max:
-                self.inventory.append("Food")
+                self.add_to_inventory("Food", None, remove=False)
+                # self.inventory.append("Food")
                 type_writer("You succesfully stole food!", clear_screen_at_start=False)
-                print("+Food")
+                # print("+Food")
                 self.show_inventory(self.inventory, "Inventory")
 
                 return
@@ -730,7 +734,7 @@ kitchen = Room(
         "location": "You are in the KITCHEN",
         "description": "It's a dirty room where prisoners can do shifts to earn money. There is also a guard stationed here. \n"
     },
-    [SHOW_INVENTORY, CHECK, MOVE, KITCHEN_SHIFT, TAKE_GUARD_UNIFROM], #Actions
+    [SHOW_INVENTORY, CHECK, MOVE, KITCHEN_SHIFT, TAKE_GUARD_UNIFORM], #Actions
     [], #Items
     ["CAFETERIA", "YARD"] #Exits
 )
@@ -770,7 +774,7 @@ rooms = {
 
 
 #Crafting
-craftable_items = {"Makeshift Weapon": ["Scrap metal", "Screwdriver"],
+craftable_items = {"Makeshift weapon": ["Scrap metal", "Screwdriver"],
                    "Grappling hook": ["Rope", "Scrap metal"]}
 
 
