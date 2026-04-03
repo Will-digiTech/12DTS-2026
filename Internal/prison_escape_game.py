@@ -30,7 +30,7 @@ WORKSHOP_SHIFT  = "Start Workshop shift"
 STEAL_FOOD = "Steal food"
 HIDE_ITEM = "Hide item under bed"
 GET_ITEM_BED = "Get stored items from under bed"
-TAKE_GUARD_UNIFROM = "Attempt to beat up guard"
+TAKE_GUARD_UNIFORM = "Attempt to beat up guard"
 CLIMB_WALL = "Attempt to climb wall"
 VENT_ESCAPE = "Climb through vent"
 CRAFT = "Craft an item"
@@ -60,7 +60,7 @@ class Player:
     def __init__(self, player_location, all_rooms):
         self.rooms = all_rooms #Dictionary of all rooms in the game, used to update player location when moving rooms
 
-        self.inventory = ["Rope", "Scrap metal"] #Player inventory
+        self.inventory = ["Makeshift weapon"] #Player inventory
 
         self.player_location = player_location #Current room player is in
         self.action_functions = { #Dictonary to link actions to their functions
@@ -73,7 +73,7 @@ class Player:
             STEAL_FOOD: self.steal_food,
             HIDE_ITEM: self.hide_item,
             GET_ITEM_BED: self.get_item_from_bed,
-            TAKE_GUARD_UNIFROM: self.knock_out_guard,
+            TAKE_GUARD_UNIFORM: self.knock_out_guard,
             CLIMB_WALL: self.climb_wall,
             VENT_ESCAPE: self.vent_escape,
             CRAFT: self.craft
@@ -566,7 +566,7 @@ class Player:
         input("\nPress enter to type sequence")
         clear_screen()
 
-        user_sequence = input("Enter sequence: \n")
+        user_sequence = input("Enter sequence: \n").lower().strip()
         if user_sequence == sequence:
             return True
         else:
@@ -605,14 +605,17 @@ class Player:
     def id_check(self):
         clear_screen()
         type_writer(guard_disguise_text["Guard id check"], ask_for_input=False)
-        user_input = int(input("\nEnter guard ID number : "))
 
-        if user_input == self.guard_id:
-            type_writer(guard_disguise_text["Correct Id"])
-            return True
-        else:
+        try:
+            user_input = int(input("\nEnter guard ID number : "))
+            if user_input == self.guard_id:
+                type_writer(guard_disguise_text["Correct Id"])
+                return True
+            else:
+                type_writer(guard_disguise_text["Incorrect Id"])
+                return False
+        except ValueError:
             type_writer(guard_disguise_text["Incorrect Id"])
-            return False
 
 
     def climb_wall(self):
@@ -772,7 +775,7 @@ craftable_items = {"Makeshift Weapon": ["Scrap metal", "Screwdriver"],
 
 
 #PLAYER CLASS OBJECT
-player = Player(rooms["WORKSHOP"], rooms)
+player = Player(rooms["CELL"], rooms)
 
 
 #Escape prison texts
@@ -794,7 +797,7 @@ guard_disguise_text = {
     "Attack guard text": "You use your makeshift weapon to incapacitate the guard.",
     "Take uniform": {
         "success": "You successfully take the guards uniform without anyone catching you.",
-        "fail": "You try to take the guards uniform but get caught."
+        "fail": "You attempt to take the guards uniform but someone catches you."
     },
     "In uniform text": "You have the guards keycard and his ID number is {guard_id}. All you have to do is walk out the front door.",
     "Guard id check": "As you are walking towards the exit you see another guard. He says, 'I don't think I've seen you around before. What's your ID number?'",
