@@ -79,11 +79,10 @@ class Player:
     def __init__(self, player_location, all_rooms):
         self.rooms = all_rooms #Dictionary of all rooms in the game, used to update player location when moving rooms
 
-        self.inventory = [] #Player inventory
 
         self.player_location = player_location #Current room player is in
         self.action_functions = { #Dictionary linking each action to its function
-            SHOW_INVENTORY: lambda: self.show_inventory(self.inventory, "Inventory", clear_screen_at_start=True), #Lambda function used to avoid function being called immediately
+            SHOW_INVENTORY: lambda: self.show_inventory(self.inventory, "Inventory", clear_screen_at_start=True, show_money=True), #Lambda function used to avoid function being called immediately
             CHECK: self.look_around,
             MOVE: self.move_room,
             TALK: self.talk_to_prisoner,
@@ -98,9 +97,9 @@ class Player:
             CRAFT: self.craft
         }
 
-        
+        self.inventory = [] #Player inventory
         self.max_inventory = 3 #Maximum number of items allowed in player inventory
-        self.bed_inventory = [] #Inventory for items stored under bed
+        self.bed_inventory = ["Screwdriver"] #Inventory for items stored under bed
         self.money = 0 #Player starting money
         self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
@@ -310,7 +309,7 @@ class Player:
                 self.show_inventory(self.bed_inventory, "Bed inventory")
 
         else:
-            print("You don't have anything to hide")
+            type_writer("You don't have anything to hide")
             return
 
     def get_item_from_bed(self):
@@ -666,7 +665,7 @@ class Player:
 
 
 
-    def show_inventory(self, inventory, name, clear_screen_at_start=False):
+    def show_inventory(self, inventory, name, clear_screen_at_start=False, show_money=False):
         if clear_screen_at_start:
             clear_screen()
 
@@ -674,6 +673,9 @@ class Player:
             print(f"{name}: {', '.join(inventory)} \n")
         else:
             print(f"{name} empty \n")
+
+        if show_money:
+            print(f"Money: ${self.money} \n")
 
         get_input("Press enter to continue\n")
         clear_screen()
