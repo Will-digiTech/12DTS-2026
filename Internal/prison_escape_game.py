@@ -99,7 +99,7 @@ class Player:
 
         self.inventory = [] #Player inventory
         self.max_inventory = 3 #Maximum number of items allowed in player inventory
-        self.bed_inventory = ["Screwdriver"] #Inventory for items stored under bed
+        self.bed_inventory = [] #Inventory for items stored under bed
         self.money = 0 #Player starting money
         self.last_shift = None #Keep track of last shift to stop player doing same shift twice in a row
 
